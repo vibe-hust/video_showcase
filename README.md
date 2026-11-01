@@ -12,7 +12,7 @@
 开启 GitHub Pages 后访问：
 
 ```
-https://vibe-hust.github.io/vedio_showcase/
+https://vibe-hust.github.io/video_showcase/
 ```
 
 本地预览：
