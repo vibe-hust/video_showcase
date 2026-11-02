@@ -34,8 +34,8 @@
   .help code{background:#232735;padding:1px 5px;border-radius:4px;font-size:12px;color:#cfe0ff}
   .prompt-text{background:var(--panel);border:1px solid var(--line);border-radius:10px;
                padding:10px 14px;color:#cfd3dd;margin-bottom:16px;max-height:110px;overflow:auto}
-  .layer-block{margin-bottom:28px}
-  .layer-head{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+  .layer-block{margin-bottom:16px}
+  .layer-head{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
   .layer-head h2{font-size:17px;margin:0}
   .layer-head span{color:var(--muted);font-size:12px}
   .matrix{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
@@ -46,7 +46,7 @@
   .mcell.hidden{display:none}
   .mcell.empty{opacity:.45;align-items:center;justify-content:center;min-height:180px;color:var(--muted);
                font-size:12px;text-align:center;padding:20px}
-  .mhead{display:flex;align-items:center;gap:8px;padding:8px 10px}
+  .mhead{display:flex;align-items:center;gap:6px;padding:5px 8px}
   .mhead .k{font:600 12px ui-monospace,monospace;padding:2px 7px;border-radius:999px;background:#232735;color:#c6cbd8}
   .mhead .k1{color:#cbd5e1;border:1px solid #475569}
   .mhead .k2{color:#bae6fd;border:1px solid #0ea5e9}
@@ -55,15 +55,15 @@
   .mhead .reuse{font-size:10px;color:#1c1400;background:var(--reuse);border-radius:999px;padding:1px 6px;margin-left:auto}
   video{width:100%;aspect-ratio:832/480;background:#000;display:block;
         filter:brightness(var(--vb,1.35)) contrast(var(--vc,1.05))}
-  .cfgline{display:flex;align-items:center;gap:8px;padding:9px 11px;flex-wrap:wrap;
+  .cfgline{display:flex;align-items:center;gap:6px;padding:5px 8px;flex-wrap:wrap;
            background:linear-gradient(90deg,#1e2636,#1a1d26);border-left:3px solid var(--accent)}
-  .cfgline .cfgid{font:700 13px ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfe0ff;
-                  background:#22304a;border:1px solid #35507a;border-radius:6px;padding:2px 7px;
+  .cfgline .cfgid{font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfe0ff;
+                  background:#22304a;border:1px solid #35507a;border-radius:5px;padding:1px 5px;
                   white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-  .cfgline .cfgtxt{font-size:12px;color:#d7dbe5;line-height:1.35;min-width:0}
+  .cfgline .cfgtxt{font-size:11px;color:#d7dbe5;line-height:1.3;min-width:0}
   .cfgline .cfgtxt b{color:#fff}
-  .meta{display:flex;flex-wrap:wrap;gap:5px;padding:8px 11px 0}
-  .badge{font-size:11px;padding:2px 7px;border-radius:999px;background:#232735;color:#c6cbd8;
+  .meta{display:flex;flex-wrap:wrap;gap:4px;padding:4px 8px 0}
+  .badge{font-size:10px;padding:1px 6px;border-radius:999px;background:#232735;color:#c6cbd8;
          border:1px solid #2e3342;white-space:nowrap}
   .badge.k{background:#2b2440;border-color:#463a6b;color:#d9ccff}
   .badge.layer{background:#1f2f2a;border-color:#2f5044;color:#b9f0d8}
@@ -84,8 +84,8 @@
   .layers{display:flex;gap:1px}
   .layer{flex:1;height:9px;border-radius:1px;background:#22252f}
   .layer.on{background:#4ade80}
-  .mfoot{display:flex;align-items:center;gap:8px;padding:7px 11px;border-top:1px solid var(--line);
-         color:var(--muted);font-size:11px;flex-wrap:wrap}
+  .mfoot{display:flex;align-items:center;gap:6px;padding:4px 8px;border-top:1px solid var(--line);
+         color:var(--muted);font-size:10px;flex-wrap:wrap}
   .mfoot .id{font:10px ui-monospace,monospace;overflow-wrap:anywhere;min-width:0}
   .stars{margin-left:auto;display:flex;gap:2px}
   .stars span{cursor:pointer;color:#4a4f5e;font-size:14px;line-height:1}
@@ -119,6 +119,7 @@
     <button id="viewGrid">列表</button>
     <button id="playAll">统一播放</button>
     <button id="pauseAll">统一暂停</button>
+    <label class="hint" style="margin-left:12px"><input id="detailToggle" type="checkbox"> 详细</label>
     <label class="hint" style="margin-left:12px"><input id="syncPlay" type="checkbox" checked> 同步播放/暂停</label>
     <label class="hint" style="margin-left:12px"><input id="brightOn" type="checkbox" checked> 提亮</label>
     <input id="brightRange" type="range" min="1" max="2.2" step="0.05" value="1.35" style="width:110px">
@@ -151,7 +152,7 @@
 <script>
 (function(){
   const D = window.GRID_DATA || {cells:{},prompts:[],layers:[],ks:[],schedules:[]};
-  const state = {prompt:1, layer:'1', k:'all', early:'all', weak:'all', view:'matrix', sync:false};
+  const state = {prompt:1, layer:'1', k:'all', early:'all', weak:'all', view:'matrix', sync:false, detail:false};
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   let ratings = {};
@@ -176,20 +177,13 @@
 
   function badges(cell){
     const p = cell.params || {};
-    const L = Number(p.latent_frames || 21);
-    const secs = ((4*(L-1)+1)/16).toFixed(2);
-    const earlyOn = !!p.early_late_enabled;
-    const weakOn = !!p.weak_strong_enabled;
+    const early = p.early_late_enabled ? `early ${p.loop_sampling_steps}` : 'early off';
+    const weak = p.weak_strong_enabled ? `weak K=${p.weak_k}` : 'weak off';
     return [
-      `<span class="badge layer">layers ${esc(p.loop_indices)}</span>`,
+      `<span class="badge layer">L${esc(p.loop_indices)}</span>`,
       `<span class="badge k">K=${p.loop_k}</span>`,
-      earlyOn ? `<span class="badge step">steps ${esc(p.loop_sampling_steps)} · early</span>`
-              : `<span class="badge off">steps all</span>`,
-      weakOn ? `<span class="badge ws">weak K=${p.weak_k} · strong ${Math.round((p.strong_fraction||0)*100)}%</span>`
-             : `<span class="badge off">weak off</span>`,
-      `<span class="badge ${p.loop_update_mode==='ode'?'ode':''}">${esc(p.loop_update_mode || 'ode')}</span>`,
-      `<span class="badge ${p.loop_xsa?'':'off'}">xsa ${p.loop_xsa?'on':'off'}</span>`,
-      `<span class="badge">${secs}s · ${L}L</span>`,
+      `<span class="badge step">${esc(early)}</span>`,
+      `<span class="badge ws">${esc(weak)}</span>`,
     ].join('');
   }
 
@@ -241,7 +235,7 @@
              controls loop muted playsinline preload="none"></video>
       ${cfgLine(cell, layer, k, sched)}
       <div class="meta">${badges(cell)}</div>
-      ${scheduleHTML(cell)}
+      ${state.detail ? scheduleHTML(cell) : ''}
       <div class="mfoot"><span class="id">${esc(cell.id)}</span><span class="id">prompt ${state.prompt}</span>${stars(cell, state.prompt)}</div>
     </article>`;
   }
@@ -344,6 +338,7 @@
   $('#viewMatrix').onclick = () => { state.view='matrix'; $('#viewMatrix').classList.add('on'); $('#viewGrid').classList.remove('on'); render(); };
   $('#viewGrid').onclick = () => { state.view='grid'; $('#viewGrid').classList.add('on'); $('#viewMatrix').classList.remove('on'); render(); };
   $('#syncPlay').onchange = e => { state.sync = e.target.checked; };
+  $('#detailToggle').onchange = e => { state.detail = e.target.checked; render(); };
 
   function visibleVideos(){
     return Array.from(document.querySelectorAll('video')).filter(v => v.offsetParent !== null);
