@@ -68,7 +68,7 @@
 <header>
   <h1>20 秒 · K 随视频时间线性递增（1 → K_max）</h1>
   <p>固定 <code>latent_frames=81</code>（321 帧 / 20.06s，27 个 chunk），<code>chunk_k_schedule=linear_up</code>，<code>weak_k=1</code>，ODE，XSA off。</p>
-  <p>每行 K_max 不同；同一行内比较 layer 28 与 10-19；同一列只差 K_max。</p>
+  <p>本页只变化 K_max × layer；<b>early-late / weak-strong 不在此实验中</b>（请到主页面的对比视图看这两个轴）。</p>
 </header>
 <div class="controls">
   <div class="row">
@@ -103,10 +103,6 @@
     </ul>
   </details>
   <div id="promptText" class="prompt-text"></div>
-  <div class="pinned-wrap">
-    <div class="pinned-label">Baseline（始终显示，不随筛选变化）</div>
-    <div id="pinned" class="pinned-row"></div>
-  </div>
   <div id="content"></div>
   <p class="legend">柱状图 = 27 个 chunk 的 K 序列（高度∝K）。黄色「复用」不存在；所有格子都是本次新跑。</p>
 </main>
@@ -190,7 +186,7 @@
 
   function render(){
     const layers = state.layer === 'all' ? D.layers : [state.layer];
-    const items = [];
+    const items = [baselineCard()];
     D.ks.forEach(k => {
       if (state.k !== 'all' && Number(k) !== Number(state.k)) return;
       layers.forEach(layer => {
@@ -198,7 +194,6 @@
         if (cell) items.push(cellHTML(layer, k, cell));
       });
     });
-    $('#pinned').innerHTML = baselineCard();
     $('#content').innerHTML = `<div class="matrix">${items.join('')}</div>`;
     const p = D.prompts.find(x => x.index === state.prompt);
     $('#promptText').textContent = p ? `P${p.index}: ${p.text}` : '';
