@@ -57,6 +57,7 @@
   .mhead .axisval{font:700 12px ui-monospace,monospace;color:#cfe0ff;background:#22304a;
                   border:1px solid #35507a;border-radius:6px;padding:1px 6px}
   .mhead .refbadge{font-size:9px;color:#0e0f13;background:var(--accent);border-radius:999px;padding:1px 5px;margin-left:auto}
+  .mhead .vsbase{font-size:9px;color:#cfe0ff;border:1px solid #35507a;border-radius:999px;padding:1px 5px;margin-left:auto}
   .timeline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
   .timeline input[type=range]{flex:1;min-width:180px}
   .cmp-select{background:var(--panel2);color:var(--fg);border:1px solid var(--line);
@@ -165,6 +166,18 @@
 </div>
 
 <main>
+  <details class="help" id="conclusions" open>
+    <summary>结论（与 baseline 对比）</summary>
+    <ul>
+      <li><b>参照物</b>：对比视图最左侧是真正的 baseline（<code>modifications off</code>），同 prompt、同 seed、同 5.06s；右侧所有变体只改一个超参数。</li>
+      <li><b>Layer</b>：在本 48 网格中，只有 <b>layer 28</b> 的单层 loop 能保持场景稳定；layer 1、14 和 1-3 在 K≥2 后出现明显的语义漂移或纹理崩坏。</li>
+      <li><b>K</b>：在 layer 28 上 K=1/2/4 都能跑；把 K 加到其他层会更快崩坏。K 不是越大越好。</li>
+      <li><b>early-late</b>：只在前两个采样步（0-1）循环，通常比四步全程循环更稳；把 loop 放到后两步更容易在视频后期退化。</li>
+      <li><b>weak-strong</b>：前段 strong、后段 weak 在 K=4 时画面偏灰绿；在本网格里没有看到相对 uniform K 的稳定增益。</li>
+      <li><b>XSA / guidance</b>：XSA 开启更颗粒化；当前 DMD few-step 路径没有 CFG，guidance 不可搜索。</li>
+      <li><b>边界</b>：以上基于 3 条 prompt、5s、EMA checkpoint；判断以视频为准，本站不展示代理指标。</li>
+    </ul>
+  </details>
   <details class="help">
     <summary>超参数含义</summary>
     <ul>
@@ -324,7 +337,7 @@
     return `<article class="mcell ${ref?'ref':''}" data-id="${esc(cell.id)}">
       <div class="mhead"><span class="axisval">${esc(v.label)}</span>
         <span class="sched">${esc(SCHED_LABEL[v.early+'_'+v.weak] || '')}</span>
-        ${ref?'<span class="refbadge">reference</span>':''}</div>
+        ${ref?'<span class="refbadge">reference</span>':'<span class="vsbase">vs baseline</span>'}</div>
       <video src="${esc(vid.path)}" poster="${esc(vid.path.replace(/\.mp4$/, '.jpg'))}"
              controls loop muted playsinline preload="none"></video>
       ${cfgLine(cell, v.layer, v.k, v.early+'_'+v.weak)}
@@ -360,9 +373,9 @@
     if (state.axis !== 'early') fixed.push(state.ref.early === 'off' ? 'early off' : 'early 0-1');
     if (state.axis !== 'weak') fixed.push(state.ref.weak === 'off' ? 'weak off' : 'weak 1');
     const axisLabel = {layer:'Layer', k:'K', early:'early-late', weak:'weak-strong'}[state.axis];
-    return `<div class="fixedline"><b>固定</b>：${esc(fixed.join(' · '))}
+    return `<div class="fixedline"><b>基线</b>：modifications off · 5s（最左）
       <span class="axisname">变化轴：${axisLabel}</span>
-      <span style="color:var(--muted)"> · ${items.length} 个变体 + baseline · prompt ${state.prompt}</span></div>
+      <span style="color:var(--muted)"> · 变体固定：${esc(fixed.join(' · '))} · ${items.length} 个变体 · prompt ${state.prompt}</span></div>
       <div class="cmp-row">${baselineCard()}${items.map(compareCard).join('')}</div>`;
   }
 
