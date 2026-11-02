@@ -325,6 +325,24 @@
     </article>`;
   }
 
+  function baselineCard(){
+    const b = D.baseline;
+    if (!b) return '';
+    const vid = videoFor(b, state.prompt);
+    if (!vid) return `<div class="mcell empty">baseline 无 prompt ${state.prompt}</div>`;
+    const p = b.params || {};
+    return `<article class="mcell" data-id="${esc(b.id)}">
+      <div class="mhead"><span class="axisval">baseline</span>
+        <span class="sched">modifications off · 5s</span></div>
+      <video src="${esc(vid.path)}" poster="${esc(vid.path.replace(/\.mp4$/, '.jpg'))}"
+             controls loop muted playsinline preload="none"></video>
+      ${cfgLine(b, p.loop_indices, p.loop_k, 'off_off')}
+      <div class="meta">${badges(b)}</div>
+      ${state.detail ? scheduleHTML(b) : ''}
+      <div class="mfoot"><span class="id">${esc(b.id)}</span>${stars(b, state.prompt)}</div>
+    </article>`;
+  }
+
   function compareView(){
     const items = axisValues();
     const fixed = [];
@@ -335,8 +353,8 @@
     const axisLabel = {layer:'Layer', k:'K', early:'early-late', weak:'weak-strong'}[state.axis];
     return `<div class="fixedline"><b>固定</b>：${esc(fixed.join(' · '))}
       <span class="axisname">变化轴：${axisLabel}</span>
-      <span style="color:var(--muted)"> · ${items.length} 个变体 · prompt ${state.prompt}</span></div>
-      <div class="cmp-row">${items.map(compareCard).join('')}</div>`;
+      <span style="color:var(--muted)"> · ${items.length} 个变体 + baseline · prompt ${state.prompt}</span></div>
+      <div class="cmp-row">${baselineCard()}${items.map(compareCard).join('')}</div>`;
   }
 
   function matrixView(){

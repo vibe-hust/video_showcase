@@ -2291,3 +2291,51 @@ window.GRID_DATA = {
   "missing": []
  }
 };
+window.GRID_DATA.baseline = {
+ "id": "baseline_5s",
+ "params": {
+  "checkpoint": "/root/rivermind-data/infer/self_forcing_1b_patched/models/checkpoints/self_forcing_dmd.pt",
+  "use_ema": true,
+  "seed": 0,
+  "latent_frames": 21,
+  "kv_cache_frames": 21,
+  "vae_decode_chunk_frames": 3,
+  "denoising_steps": [
+   1000,
+   750,
+   500,
+   250
+  ],
+  "warp_denoising_step": true,
+  "timestep_shift": 5.0,
+  "context_noise": 0,
+  "modifications_enabled": false,
+  "loop_update_mode": "ode",
+  "loop_xsa": false,
+  "loop_cross_gate_checkpoint": null,
+  "step_k_schedule": "off",
+  "chunk_k_schedule": "off",
+  "loop_indices": "0-29",
+  "loop_k": 1,
+  "early_late_enabled": false,
+  "loop_sampling_steps": "0-1",
+  "weak_strong_enabled": false,
+  "strong_k": 1,
+  "weak_k": 1,
+  "strong_fraction": 0.5
+ },
+ "videos": [
+  {
+   "prompt": 1,
+   "path": "videos/baseline_5s/prompt_1.mp4"
+  },
+  {
+   "prompt": 2,
+   "path": "videos/baseline_5s/prompt_2.mp4"
+  },
+  {
+   "prompt": 3,
+   "path": "videos/baseline_5s/prompt_3.mp4"
+  }
+ ]
+};
