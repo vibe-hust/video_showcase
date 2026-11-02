@@ -43,6 +43,7 @@
   .mcell{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;
          display:flex;flex-direction:column;transition:opacity .15s}
   .mcell.dim{opacity:.22;filter:saturate(.4)}
+  .mcell.hidden{display:none}
   .mcell.empty{opacity:.45;align-items:center;justify-content:center;min-height:180px;color:var(--muted);
                font-size:12px;text-align:center;padding:20px}
   .mhead{display:flex;align-items:center;gap:8px;padding:8px 10px}
@@ -116,7 +117,9 @@
     <span class="lbl">View</span>
     <button id="viewMatrix" class="on">矩阵</button>
     <button id="viewGrid">列表</button>
-    <label class="hint" style="margin-left:12px"><input id="syncPlay" type="checkbox"> 同步播放/暂停</label>
+    <button id="playAll">统一播放</button>
+    <button id="pauseAll">统一暂停</button>
+    <label class="hint" style="margin-left:12px"><input id="syncPlay" type="checkbox" checked> 同步播放/暂停</label>
     <label class="hint" style="margin-left:12px"><input id="brightOn" type="checkbox" checked> 提亮</label>
     <input id="brightRange" type="range" min="1" max="2.2" step="0.05" value="1.35" style="width:110px">
     <span id="brightVal" class="hint">1.35×</span>
@@ -261,7 +264,7 @@
           const cell = D.cells[`${layer}|${k}|${s.id}`];
           const html = cellHTML(layer, k, s.id, cell);
           return matchFilters(layer, k, s.id) ? html
-            : html.replace('class="mcell', 'class="mcell dim');
+            : html.replace('class="mcell', 'class="mcell hidden');
         }).join('');
         return `<div class="rowhint">K = ${k}</div><div class="matrix">${cells}</div>`;
       }).join('');
@@ -341,6 +344,22 @@
   $('#viewMatrix').onclick = () => { state.view='matrix'; $('#viewMatrix').classList.add('on'); $('#viewGrid').classList.remove('on'); render(); };
   $('#viewGrid').onclick = () => { state.view='grid'; $('#viewGrid').classList.add('on'); $('#viewMatrix').classList.remove('on'); render(); };
   $('#syncPlay').onchange = e => { state.sync = e.target.checked; };
+
+  function visibleVideos(){
+    return Array.from(document.querySelectorAll('video')).filter(v => v.offsetParent !== null);
+  }
+  function playAll(){
+    const vids = visibleVideos();
+    syncing = true;
+    vids.forEach(v => { try { v.currentTime = 0; } catch(e){} });
+    vids.forEach(v => { v.play().catch(()=>{}); });
+    setTimeout(() => { syncing = false; }, 150);
+  }
+  function pauseAll(){
+    visibleVideos().forEach(v => v.pause());
+  }
+  $('#playAll').onclick = playAll;
+  $('#pauseAll').onclick = pauseAll;
 
   const brightOn = $('#brightOn'), brightRange = $('#brightRange'), brightVal = $('#brightVal');
   function applyBright(){
