@@ -50,6 +50,10 @@
   .fixedline b{color:#fff}
   .fixedline .axisname{color:var(--accent);margin-left:10px}
   .cmp-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:10px}
+  .pinned-wrap{margin:0 0 12px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#12141a}
+  .pinned-label{font-size:12px;color:var(--muted);margin:0 0 8px}
+  .pinned-row{display:flex;flex-wrap:wrap;gap:10px}
+  .pinned-row .mcell{flex:0 0 330px;max-width:330px}
   .mhead .axisval{font:700 12px ui-monospace,monospace;color:#cfe0ff;background:#22304a;
                   border:1px solid #35507a;border-radius:6px;padding:1px 6px}
   .mhead .refbadge{font-size:9px;color:#0e0f13;background:var(--accent);border-radius:999px;padding:1px 5px;margin-left:auto}
@@ -176,6 +180,10 @@
     <p class="legend">「提亮」只作用于网页显示（CSS brightness/contrast），不修改源 mp4；默认 1.35×。暗画面可能来自 prompt 本身（黄昏/夜景）或 loop 失败，请以原始亮度为准判断失败，提亮只帮助看清细节。</p>
   </details>
   <div id="promptText" class="prompt-text"></div>
+  <div id="pinnedWrap" class="pinned-wrap" style="display:none">
+    <div class="pinned-label">Baseline（始终显示，不随过滤变化）</div>
+    <div id="pinned" class="pinned-row"></div>
+  </div>
   <div id="content"></div>
   <p class="legend">K：灰=1 / 蓝=2 / 紫=4 &nbsp;·&nbsp; 黄色「复用」= 此前已跑过、直接复用视频 &nbsp;·&nbsp; 灰色参数徽章 = 该轴关闭</p>
 </main>
@@ -388,6 +396,12 @@
 
   function render(){
     const cmp = state.view === 'compare';
+    if (cmp || !D.baseline) {
+      $('#pinnedWrap').style.display = 'none';
+    } else {
+      $('#pinned').innerHTML = baselineCard();
+      $('#pinnedWrap').style.display = 'block';
+    }
     const html = cmp ? compareView() : (state.view === 'matrix' ? matrixView() : gridView());
     $('#content').innerHTML = html || '<p class="legend">没有匹配的配置</p>';
     const p = D.prompts.find(x => x.index === state.prompt);
