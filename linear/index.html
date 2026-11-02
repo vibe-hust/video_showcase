@@ -32,6 +32,10 @@
                color:#cfd3dd;margin-bottom:16px;max-height:110px;overflow:auto}
   .matrix{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:0}
   .mcell{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+  .pinned-wrap{margin:0 0 12px;padding:8px;border:1px solid var(--line);border-radius:10px;background:#12141a}
+  .pinned-label{font-size:11px;color:var(--muted);margin:0 0 6px}
+  .pinned-row{display:flex;flex-wrap:wrap}
+  .pinned-row .mcell{flex:0 0 330px;max-width:330px}
   .mhead{display:flex;align-items:center;gap:6px;padding:6px 8px}
   .mhead .k{font:700 11px ui-monospace,monospace;padding:1px 6px;border-radius:999px;background:#232735;color:#d9ccff;border:1px solid #463a6b}
   .mhead .sched{font-size:10px;color:var(--muted)}
@@ -70,6 +74,7 @@
   <div class="row">
     <span class="lbl">Prompt</span><div id="promptTabs" class="row" style="margin:0"></div>
     <span class="lbl" style="margin-left:12px">Layer</span><div id="layerTabs" class="row" style="margin:0"></div>
+    <span class="lbl" style="margin-left:12px">K_max</span><div id="kTabs" class="row" style="margin:0"></div>
     <label class="hint" style="margin-left:12px"><input id="syncPlay" type="checkbox" checked> 同步播放/暂停</label>
     <label class="hint" style="margin-left:12px"><input id="brightOn" type="checkbox" checked> 提亮</label>
     <input id="brightRange" type="range" min="1" max="2.2" step="0.05" value="1.35" style="width:110px">
@@ -98,6 +103,10 @@
     </ul>
   </details>
   <div id="promptText" class="prompt-text"></div>
+  <div class="pinned-wrap">
+    <div class="pinned-label">Baseline（始终显示，不随筛选变化）</div>
+    <div id="pinned" class="pinned-row"></div>
+  </div>
   <div id="content"></div>
   <p class="legend">柱状图 = 27 个 chunk 的 K 序列（高度∝K）。黄色「复用」不存在；所有格子都是本次新跑。</p>
 </main>
@@ -105,7 +114,7 @@
 <script>
 (function(){
   const D = window.LINEAR_DATA || {cells:{},prompts:[],ks:[],layers:[]};
-  const state = {prompt:1, layer:'all', sync:false};
+  const state = {prompt:1, layer:'all', k:'all', sync:false};
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   let ratings = {};
@@ -153,13 +162,43 @@
       <div class="mfoot"><span>prompt ${state.prompt}</span>${stars(cell, state.prompt)}</div>
     </article>`;
   }
+  function baselineCard(){
+    const b = D.baseline;
+    if (!b) return '';
+    const v = (b.videos || []).find(x => Number(x.prompt) === Number(state.prompt));
+    if (!v) return `<div class="mcell" style="padding:20px;color:#9aa0ae">baseline 无 prompt ${state.prompt}</div>`;
+    const p = b.params || {};
+    return `<article class="mcell" data-id="${esc(b.id)}">
+      <div class="mhead"><span class="k">baseline</span><span class="sched">modifications off · 20.06s</span></div>
+      <video src="${esc(v.path)}" poster="${esc(v.poster||'')}" controls loop muted playsinline preload="none"></video>
+      <div class="cfgline"><span class="cfgid">${esc(b.id)}</span>
+        <span class="cfgtxt"><b>layer ${esc(p.loop_indices)}</b> · <b>K=1</b> · modifications off · 20.06s</span></div>
+      <div class="meta">
+        <span class="badge layer">layers ${esc(p.loop_indices)}</span>
+        <span class="badge k">K=1</span>
+        <span class="badge">hooks off</span>
+        <span class="badge">20.06s · 27 chunks</span>
+      </div>
+      <div class="sched">
+        <div class="cap">27 个 chunk 的实际 K（baseline 恒为 1）</div>
+        <div class="kbars">${bars(b.seq || Array(27).fill(1), Math.max(...D.ks))}</div>
+        <div class="cap">min K=1 · max K=1</div>
+      </div>
+      <div class="mfoot"><span>prompt ${state.prompt}</span>${stars(b, state.prompt)}</div>
+    </article>`;
+  }
+
   function render(){
     const layers = state.layer === 'all' ? D.layers : [state.layer];
     const items = [];
-    D.ks.forEach(k => layers.forEach(layer => {
-      const cell = D.cells[`${layer}|${k}`];
-      if (cell) items.push(cellHTML(layer, k, cell));
-    }));
+    D.ks.forEach(k => {
+      if (state.k !== 'all' && Number(k) !== Number(state.k)) return;
+      layers.forEach(layer => {
+        const cell = D.cells[`${layer}|${k}`];
+        if (cell) items.push(cellHTML(layer, k, cell));
+      });
+    });
+    $('#pinned').innerHTML = baselineCard();
     $('#content').innerHTML = `<div class="matrix">${items.join('')}</div>`;
     const p = D.prompts.find(x => x.index === state.prompt);
     $('#promptText').textContent = p ? `P${p.index}: ${p.text}` : '';
@@ -242,6 +281,8 @@
       v => { state.prompt = Number(v); tabs(); render(); });
     tabGroup('#layerTabs', [{id:'all',label:'全部'}, ...D.layers.map(l => ({id:l,label:'L'+l}))], state.layer,
       v => { state.layer = v; tabs(); render(); });
+    tabGroup('#kTabs', [{id:'all',label:'全部'}, ...D.ks.map(k => ({id:String(k),label:'K='+k}))], state.k,
+      v => { state.k = v; tabs(); render(); });
   }
   $('#syncPlay').onchange = e => { state.sync = e.target.checked; };
   $('#playAll').onclick = playAll;
