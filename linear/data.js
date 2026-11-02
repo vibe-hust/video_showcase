@@ -1247,3 +1247,637 @@ window.LINEAR_DATA.baseline = {
  ],
  "nchunks": 27
 };
+window.LINEAR_DATA.fixed = {
+ "28|2": {
+  "id": "fixed_k2_l28",
+  "params": {
+   "checkpoint": "/root/rivermind-data/infer/self_forcing_1b/models/checkpoints/self_forcing_dmd.pt",
+   "use_ema": true,
+   "seed": 0,
+   "latent_frames": 81,
+   "kv_cache_frames": 21,
+   "vae_decode_chunk_frames": 3,
+   "denoising_steps": [
+    1000,
+    750,
+    500,
+    250
+   ],
+   "warp_denoising_step": true,
+   "timestep_shift": 5.0,
+   "context_noise": 0,
+   "modifications_enabled": true,
+   "loop_update_mode": "ode",
+   "loop_xsa": false,
+   "loop_cross_gate_checkpoint": null,
+   "loop_indices": "28",
+   "loop_k": 2,
+   "early_late_enabled": false,
+   "loop_sampling_steps": "0-1",
+   "weak_strong_enabled": false,
+   "strong_k": 2,
+   "weak_k": 1,
+   "strong_fraction": 0.5
+  },
+  "videos": [
+   {
+    "prompt": 1,
+    "path": "videos/fixed_k2_l28/prompt_1.mp4",
+    "poster": "videos/fixed_k2_l28/prompt_1.jpg"
+   },
+   {
+    "prompt": 2,
+    "path": "videos/fixed_k2_l28/prompt_2.mp4",
+    "poster": "videos/fixed_k2_l28/prompt_2.jpg"
+   },
+   {
+    "prompt": 3,
+    "path": "videos/fixed_k2_l28/prompt_3.mp4",
+    "poster": "videos/fixed_k2_l28/prompt_3.jpg"
+   }
+  ],
+  "seq": [
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2
+  ],
+  "nchunks": 27
+ },
+ "28|3": {
+  "id": "fixed_k3_l28",
+  "params": {
+   "checkpoint": "/root/rivermind-data/infer/self_forcing_1b/models/checkpoints/self_forcing_dmd.pt",
+   "use_ema": true,
+   "seed": 0,
+   "latent_frames": 81,
+   "kv_cache_frames": 21,
+   "vae_decode_chunk_frames": 3,
+   "denoising_steps": [
+    1000,
+    750,
+    500,
+    250
+   ],
+   "warp_denoising_step": true,
+   "timestep_shift": 5.0,
+   "context_noise": 0,
+   "modifications_enabled": true,
+   "loop_update_mode": "ode",
+   "loop_xsa": false,
+   "loop_cross_gate_checkpoint": null,
+   "loop_indices": "28",
+   "loop_k": 3,
+   "early_late_enabled": false,
+   "loop_sampling_steps": "0-1",
+   "weak_strong_enabled": false,
+   "strong_k": 3,
+   "weak_k": 1,
+   "strong_fraction": 0.5
+  },
+  "videos": [
+   {
+    "prompt": 1,
+    "path": "videos/fixed_k3_l28/prompt_1.mp4",
+    "poster": "videos/fixed_k3_l28/prompt_1.jpg"
+   },
+   {
+    "prompt": 2,
+    "path": "videos/fixed_k3_l28/prompt_2.mp4",
+    "poster": "videos/fixed_k3_l28/prompt_2.jpg"
+   },
+   {
+    "prompt": 3,
+    "path": "videos/fixed_k3_l28/prompt_3.mp4",
+    "poster": "videos/fixed_k3_l28/prompt_3.jpg"
+   }
+  ],
+  "seq": [
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3
+  ],
+  "nchunks": 27
+ },
+ "28|4": {
+  "id": "fixed_k4_l28",
+  "params": {
+   "checkpoint": "/root/rivermind-data/infer/self_forcing_1b/models/checkpoints/self_forcing_dmd.pt",
+   "use_ema": true,
+   "seed": 0,
+   "latent_frames": 81,
+   "kv_cache_frames": 21,
+   "vae_decode_chunk_frames": 3,
+   "denoising_steps": [
+    1000,
+    750,
+    500,
+    250
+   ],
+   "warp_denoising_step": true,
+   "timestep_shift": 5.0,
+   "context_noise": 0,
+   "modifications_enabled": true,
+   "loop_update_mode": "ode",
+   "loop_xsa": false,
+   "loop_cross_gate_checkpoint": null,
+   "loop_indices": "28",
+   "loop_k": 4,
+   "early_late_enabled": false,
+   "loop_sampling_steps": "0-1",
+   "weak_strong_enabled": false,
+   "strong_k": 4,
+   "weak_k": 1,
+   "strong_fraction": 0.5
+  },
+  "videos": [
+   {
+    "prompt": 1,
+    "path": "videos/fixed_k4_l28/prompt_1.mp4",
+    "poster": "videos/fixed_k4_l28/prompt_1.jpg"
+   },
+   {
+    "prompt": 2,
+    "path": "videos/fixed_k4_l28/prompt_2.mp4",
+    "poster": "videos/fixed_k4_l28/prompt_2.jpg"
+   },
+   {
+    "prompt": 3,
+    "path": "videos/fixed_k4_l28/prompt_3.mp4",
+    "poster": "videos/fixed_k4_l28/prompt_3.jpg"
+   }
+  ],
+  "seq": [
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4
+  ],
+  "nchunks": 27
+ },
+ "28|6": {
+  "id": "fixed_k6_l28",
+  "params": {
+   "checkpoint": "/root/rivermind-data/infer/self_forcing_1b/models/checkpoints/self_forcing_dmd.pt",
+   "use_ema": true,
+   "seed": 0,
+   "latent_frames": 81,
+   "kv_cache_frames": 21,
+   "vae_decode_chunk_frames": 3,
+   "denoising_steps": [
+    1000,
+    750,
+    500,
+    250
+   ],
+   "warp_denoising_step": true,
+   "timestep_shift": 5.0,
+   "context_noise": 0,
+   "modifications_enabled": true,
+   "loop_update_mode": "ode",
+   "loop_xsa": false,
+   "loop_cross_gate_checkpoint": null,
+   "loop_indices": "28",
+   "loop_k": 6,
+   "early_late_enabled": false,
+   "loop_sampling_steps": "0-1",
+   "weak_strong_enabled": false,
+   "strong_k": 6,
+   "weak_k": 1,
+   "strong_fraction": 0.5
+  },
+  "videos": [
+   {
+    "prompt": 1,
+    "path": "videos/fixed_k6_l28/prompt_1.mp4",
+    "poster": "videos/fixed_k6_l28/prompt_1.jpg"
+   },
+   {
+    "prompt": 2,
+    "path": "videos/fixed_k6_l28/prompt_2.mp4",
+    "poster": "videos/fixed_k6_l28/prompt_2.jpg"
+   },
+   {
+    "prompt": 3,
+    "path": "videos/fixed_k6_l28/prompt_3.mp4",
+    "poster": "videos/fixed_k6_l28/prompt_3.jpg"
+   }
+  ],
+  "seq": [
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6
+  ],
+  "nchunks": 27
+ },
+ "10-19|2": {
+  "id": "fixed_k2_l10-19",
+  "params": {
+   "checkpoint": "/root/rivermind-data/infer/self_forcing_1b/models/checkpoints/self_forcing_dmd.pt",
+   "use_ema": true,
+   "seed": 0,
+   "latent_frames": 81,
+   "kv_cache_frames": 21,
+   "vae_decode_chunk_frames": 3,
+   "denoising_steps": [
+    1000,
+    750,
+    500,
+    250
+   ],
+   "warp_denoising_step": true,
+   "timestep_shift": 5.0,
+   "context_noise": 0,
+   "modifications_enabled": true,
+   "loop_update_mode": "ode",
+   "loop_xsa": false,
+   "loop_cross_gate_checkpoint": null,
+   "loop_indices": "10-19",
+   "loop_k": 2,
+   "early_late_enabled": false,
+   "loop_sampling_steps": "0-1",
+   "weak_strong_enabled": false,
+   "strong_k": 2,
+   "weak_k": 1,
+   "strong_fraction": 0.5
+  },
+  "videos": [
+   {
+    "prompt": 1,
+    "path": "videos/fixed_k2_l10-19/prompt_1.mp4",
+    "poster": "videos/fixed_k2_l10-19/prompt_1.jpg"
+   },
+   {
+    "prompt": 2,
+    "path": "videos/fixed_k2_l10-19/prompt_2.mp4",
+    "poster": "videos/fixed_k2_l10-19/prompt_2.jpg"
+   },
+   {
+    "prompt": 3,
+    "path": "videos/fixed_k2_l10-19/prompt_3.mp4",
+    "poster": "videos/fixed_k2_l10-19/prompt_3.jpg"
+   }
+  ],
+  "seq": [
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2,
+   2
+  ],
+  "nchunks": 27
+ },
+ "10-19|3": {
+  "id": "fixed_k3_l10-19",
+  "params": {
+   "checkpoint": "/root/rivermind-data/infer/self_forcing_1b/models/checkpoints/self_forcing_dmd.pt",
+   "use_ema": true,
+   "seed": 0,
+   "latent_frames": 81,
+   "kv_cache_frames": 21,
+   "vae_decode_chunk_frames": 3,
+   "denoising_steps": [
+    1000,
+    750,
+    500,
+    250
+   ],
+   "warp_denoising_step": true,
+   "timestep_shift": 5.0,
+   "context_noise": 0,
+   "modifications_enabled": true,
+   "loop_update_mode": "ode",
+   "loop_xsa": false,
+   "loop_cross_gate_checkpoint": null,
+   "loop_indices": "10-19",
+   "loop_k": 3,
+   "early_late_enabled": false,
+   "loop_sampling_steps": "0-1",
+   "weak_strong_enabled": false,
+   "strong_k": 3,
+   "weak_k": 1,
+   "strong_fraction": 0.5
+  },
+  "videos": [
+   {
+    "prompt": 1,
+    "path": "videos/fixed_k3_l10-19/prompt_1.mp4",
+    "poster": "videos/fixed_k3_l10-19/prompt_1.jpg"
+   },
+   {
+    "prompt": 2,
+    "path": "videos/fixed_k3_l10-19/prompt_2.mp4",
+    "poster": "videos/fixed_k3_l10-19/prompt_2.jpg"
+   },
+   {
+    "prompt": 3,
+    "path": "videos/fixed_k3_l10-19/prompt_3.mp4",
+    "poster": "videos/fixed_k3_l10-19/prompt_3.jpg"
+   }
+  ],
+  "seq": [
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3,
+   3
+  ],
+  "nchunks": 27
+ },
+ "10-19|4": {
+  "id": "fixed_k4_l10-19",
+  "params": {
+   "checkpoint": "/root/rivermind-data/infer/self_forcing_1b/models/checkpoints/self_forcing_dmd.pt",
+   "use_ema": true,
+   "seed": 0,
+   "latent_frames": 81,
+   "kv_cache_frames": 21,
+   "vae_decode_chunk_frames": 3,
+   "denoising_steps": [
+    1000,
+    750,
+    500,
+    250
+   ],
+   "warp_denoising_step": true,
+   "timestep_shift": 5.0,
+   "context_noise": 0,
+   "modifications_enabled": true,
+   "loop_update_mode": "ode",
+   "loop_xsa": false,
+   "loop_cross_gate_checkpoint": null,
+   "loop_indices": "10-19",
+   "loop_k": 4,
+   "early_late_enabled": false,
+   "loop_sampling_steps": "0-1",
+   "weak_strong_enabled": false,
+   "strong_k": 4,
+   "weak_k": 1,
+   "strong_fraction": 0.5
+  },
+  "videos": [
+   {
+    "prompt": 1,
+    "path": "videos/fixed_k4_l10-19/prompt_1.mp4",
+    "poster": "videos/fixed_k4_l10-19/prompt_1.jpg"
+   },
+   {
+    "prompt": 2,
+    "path": "videos/fixed_k4_l10-19/prompt_2.mp4",
+    "poster": "videos/fixed_k4_l10-19/prompt_2.jpg"
+   },
+   {
+    "prompt": 3,
+    "path": "videos/fixed_k4_l10-19/prompt_3.mp4",
+    "poster": "videos/fixed_k4_l10-19/prompt_3.jpg"
+   }
+  ],
+  "seq": [
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4,
+   4
+  ],
+  "nchunks": 27
+ },
+ "10-19|6": {
+  "id": "fixed_k6_l10-19",
+  "params": {
+   "checkpoint": "/root/rivermind-data/infer/self_forcing_1b/models/checkpoints/self_forcing_dmd.pt",
+   "use_ema": true,
+   "seed": 0,
+   "latent_frames": 81,
+   "kv_cache_frames": 21,
+   "vae_decode_chunk_frames": 3,
+   "denoising_steps": [
+    1000,
+    750,
+    500,
+    250
+   ],
+   "warp_denoising_step": true,
+   "timestep_shift": 5.0,
+   "context_noise": 0,
+   "modifications_enabled": true,
+   "loop_update_mode": "ode",
+   "loop_xsa": false,
+   "loop_cross_gate_checkpoint": null,
+   "loop_indices": "10-19",
+   "loop_k": 6,
+   "early_late_enabled": false,
+   "loop_sampling_steps": "0-1",
+   "weak_strong_enabled": false,
+   "strong_k": 6,
+   "weak_k": 1,
+   "strong_fraction": 0.5
+  },
+  "videos": [
+   {
+    "prompt": 1,
+    "path": "videos/fixed_k6_l10-19/prompt_1.mp4",
+    "poster": "videos/fixed_k6_l10-19/prompt_1.jpg"
+   },
+   {
+    "prompt": 2,
+    "path": "videos/fixed_k6_l10-19/prompt_2.mp4",
+    "poster": "videos/fixed_k6_l10-19/prompt_2.jpg"
+   },
+   {
+    "prompt": 3,
+    "path": "videos/fixed_k6_l10-19/prompt_3.mp4",
+    "poster": "videos/fixed_k6_l10-19/prompt_3.jpg"
+   }
+  ],
+  "seq": [
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6,
+   6
+  ],
+  "nchunks": 27
+ }
+};

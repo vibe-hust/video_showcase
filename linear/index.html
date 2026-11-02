@@ -36,6 +36,12 @@
   .pinned-label{font-size:11px;color:var(--muted);margin:0 0 6px}
   .pinned-row{display:flex;flex-wrap:wrap}
   .pinned-row .mcell{flex:0 0 330px;max-width:330px}
+  .baseline-strip{display:flex;align-items:center;gap:12px;background:#12141a;border:1px solid var(--line);
+                  border-radius:10px;padding:8px;margin:0 0 10px}
+  .baseline-strip video{width:260px;flex:0 0 260px;aspect-ratio:832/480;border-radius:6px}
+  .base-info{font-size:12px;color:#cfd3dd;line-height:1.5}
+  .base-info b{color:#fff}
+  .base-info .muted{color:var(--muted);font-size:11px}
   .mhead{display:flex;align-items:center;gap:6px;padding:6px 8px}
   .mhead .k{font:700 11px ui-monospace,monospace;padding:1px 6px;border-radius:999px;background:#232735;color:#d9ccff;border:1px solid #463a6b}
   .mhead .sched{font-size:10px;color:var(--muted)}
@@ -68,13 +74,14 @@
 <header>
   <h1>20 秒 · K 随视频时间线性递增（1 → K_max）</h1>
   <p>固定 <code>latent_frames=81</code>（321 帧 / 20.06s，27 个 chunk），<code>chunk_k_schedule=linear_up</code>，<code>weak_k=1</code>，ODE，XSA off。</p>
-  <p>本页只变化 K_max × layer；<b>early-late / weak-strong 不在此实验中</b>（请到主页面的对比视图看这两个轴）。</p>
+  <p>同一 K 下并排比较 <b>linear_up（1→K）</b> 与 <b>fixed K</b>；<b>early-late / weak-strong 不在此实验中</b>（请到主页面的对比视图看这两个轴）。</p>
 </header>
 <div class="controls">
   <div class="row">
     <span class="lbl">Prompt</span><div id="promptTabs" class="row" style="margin:0"></div>
     <span class="lbl" style="margin-left:12px">Layer</span><div id="layerTabs" class="row" style="margin:0"></div>
     <span class="lbl" style="margin-left:12px">K_max</span><div id="kTabs" class="row" style="margin:0"></div>
+    <span class="lbl" style="margin-left:12px">Type</span><div id="typeTabs" class="row" style="margin:0"></div>
     <label class="hint" style="margin-left:12px"><input id="syncPlay" type="checkbox" checked> 同步播放/暂停</label>
     <label class="hint" style="margin-left:12px"><input id="brightOn" type="checkbox" checked> 提亮</label>
     <input id="brightRange" type="range" min="1" max="2.2" step="0.05" value="1.35" style="width:110px">
@@ -103,6 +110,7 @@
     </ul>
   </details>
   <div id="promptText" class="prompt-text"></div>
+  <div id="baselineStrip"></div>
   <div id="content"></div>
   <p class="legend">柱状图 = 27 个 chunk 的 K 序列（高度∝K）。黄色「复用」不存在；所有格子都是本次新跑。</p>
 </main>
@@ -110,7 +118,7 @@
 <script>
 (function(){
   const D = window.LINEAR_DATA || {cells:{},prompts:[],ks:[],layers:[]};
-  const state = {prompt:1, layer:'all', k:'all', sync:false};
+  const state = {prompt:1, layer:'all', k:'all', type:'all', sync:false};
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   let ratings = {};
@@ -152,46 +160,66 @@
       </div>
       <div class="sched">
         <div class="cap">27 个 chunk 的实际 K（左→右 = 视频时间）</div>
-        <div class="kbars">${bars(cell.seq, k)}</div>
+        <div class="kbars">${bars(cell.seq, Math.max(...D.ks))}</div>
         <div class="cap">min K=${cell.seq[0]} · max K=${cell.seq[cell.seq.length-1]} · 平均 ${(cell.seq.reduce((a,b)=>a+b,0)/cell.seq.length).toFixed(1)}</div>
       </div>
       <div class="mfoot"><span>prompt ${state.prompt}</span>${stars(cell, state.prompt)}</div>
     </article>`;
   }
+  function fixedCard(layer, k, cell){
+    if (!cell) return '';
+    const v = videoFor(cell, state.prompt);
+    if (!v) return `<div class="mcell" style="padding:20px;color:#9aa0ae">no prompt ${state.prompt}</div>`;
+    const p = cell.params || {};
+    return `<article class="mcell" data-id="${esc(cell.id)}">
+      <div class="mhead"><span class="k">K=${k} fixed</span><span class="sched">layer ${esc(layer)} · fixed</span></div>
+      <video src="${esc(v.path)}" poster="${esc(v.poster||'')}" controls loop muted playsinline preload="none"></video>
+      <div class="cfgline"><span class="cfgid">${esc(cell.id)}</span>
+        <span class="cfgtxt"><b>layer ${esc(layer)}</b> · <b>K=${k} fixed</b> · 20.06s · 27 chunks</span></div>
+      <div class="meta">
+        <span class="badge layer">layers ${esc(layer)}</span>
+        <span class="badge k">K=${k}</span>
+        <span class="badge">fixed K</span>
+        <span class="badge ode">${esc(p.loop_update_mode||'ode')}</span>
+        <span class="badge">20.06s · 27 chunks</span>
+      </div>
+      <div class="sched">
+        <div class="cap">27 个 chunk 的实际 K（恒定）</div>
+        <div class="kbars">${bars(cell.seq, Math.max(...D.ks))}</div>
+        <div class="cap">min K=${k} · max K=${k}</div>
+      </div>
+      <div class="mfoot"><span>prompt ${state.prompt}</span>${stars(cell, state.prompt)}</div>
+    </article>`;
+  }
+
   function baselineCard(){
     const b = D.baseline;
     if (!b) return '';
     const v = (b.videos || []).find(x => Number(x.prompt) === Number(state.prompt));
-    if (!v) return `<div class="mcell" style="padding:20px;color:#9aa0ae">baseline 无 prompt ${state.prompt}</div>`;
+    if (!v) return `<div class="base-info">baseline 无 prompt ${state.prompt}</div>`;
     const p = b.params || {};
-    return `<article class="mcell" data-id="${esc(b.id)}">
-      <div class="mhead"><span class="k">baseline</span><span class="sched">modifications off · 20.06s</span></div>
+    return `<div class="baseline-strip">
       <video src="${esc(v.path)}" poster="${esc(v.poster||'')}" controls loop muted playsinline preload="none"></video>
-      <div class="cfgline"><span class="cfgid">${esc(b.id)}</span>
-        <span class="cfgtxt"><b>layer ${esc(p.loop_indices)}</b> · <b>K=1</b> · modifications off · 20.06s</span></div>
-      <div class="meta">
-        <span class="badge layer">layers ${esc(p.loop_indices)}</span>
-        <span class="badge k">K=1</span>
-        <span class="badge">hooks off</span>
-        <span class="badge">20.06s · 27 chunks</span>
+      <div class="base-info">
+        <b>baseline</b> · modifications off · 20.06s · K=1<br>
+        <span class="muted">layer ${esc(p.loop_indices)} · hooks off · 27 chunks · prompt ${state.prompt}</span>
       </div>
-      <div class="sched">
-        <div class="cap">27 个 chunk 的实际 K（baseline 恒为 1）</div>
-        <div class="kbars">${bars(b.seq || Array(27).fill(1), Math.max(...D.ks))}</div>
-        <div class="cap">min K=1 · max K=1</div>
-      </div>
-      <div class="mfoot"><span>prompt ${state.prompt}</span>${stars(b, state.prompt)}</div>
-    </article>`;
+    </div>`;
   }
 
   function render(){
     const layers = state.layer === 'all' ? D.layers : [state.layer];
-    const items = [baselineCard()];
+    const items = [];
+    $('#baselineStrip').innerHTML = baselineCard();
     D.ks.forEach(k => {
       if (state.k !== 'all' && Number(k) !== Number(state.k)) return;
       layers.forEach(layer => {
-        const cell = D.cells[`${layer}|${k}`];
-        if (cell) items.push(cellHTML(layer, k, cell));
+        const lin = D.cells[`${layer}|${k}`];
+        if (lin && (state.type === 'all' || state.type === 'linear'))
+          items.push(cellHTML(layer, k, lin));
+        const fx = (D.fixed || {})[`${layer}|${k}`];
+        if (fx && (state.type === 'all' || state.type === 'fixed'))
+          items.push(fixedCard(layer, k, fx));
       });
     });
     $('#content').innerHTML = `<div class="matrix">${items.join('')}</div>`;
@@ -278,6 +306,8 @@
       v => { state.layer = v; tabs(); render(); });
     tabGroup('#kTabs', [{id:'all',label:'全部'}, ...D.ks.map(k => ({id:String(k),label:'K='+k}))], state.k,
       v => { state.k = v; tabs(); render(); });
+    tabGroup('#typeTabs', [{id:'all',label:'全部'},{id:'linear',label:'linear'},{id:'fixed',label:'fixed'}], state.type,
+      v => { state.type = v; tabs(); render(); });
   }
   $('#syncPlay').onchange = e => { state.sync = e.target.checked; };
   $('#playAll').onclick = playAll;
