@@ -16,6 +16,7 @@
   .controls{position:sticky;top:0;z-index:20;background:rgba(14,15,19,.95);backdrop-filter:blur(8px);
             border-bottom:1px solid var(--line);padding:10px 28px}
   .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:5px 0}
+  .timeline input[type=range]{flex:1;min-width:200px}
   .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;min-width:52px}
   button{background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font:inherit;cursor:pointer;font-size:13px}
   button:hover{border-color:#3b4254}
@@ -69,11 +70,19 @@
   <div class="row">
     <span class="lbl">Prompt</span><div id="promptTabs" class="row" style="margin:0"></div>
     <span class="lbl" style="margin-left:12px">Layer</span><div id="layerTabs" class="row" style="margin:0"></div>
-    <label class="hint" style="margin-left:12px"><input id="syncPlay" type="checkbox"> 同步播放/暂停</label>
+    <label class="hint" style="margin-left:12px"><input id="syncPlay" type="checkbox" checked> 同步播放/暂停</label>
     <label class="hint" style="margin-left:12px"><input id="brightOn" type="checkbox" checked> 提亮</label>
     <input id="brightRange" type="range" min="1" max="2.2" step="0.05" value="1.35" style="width:110px">
     <span id="brightVal" class="hint">1.35×</span>
     <span id="count" class="hint" style="margin-left:auto"></span>
+  </div>
+  <div class="row timeline">
+    <button id="prevFrame">◀ 帧</button>
+    <button id="playAll">统一播放</button>
+    <button id="pauseAll">统一暂停</button>
+    <button id="nextFrame">帧 ▶</button>
+    <input id="timeSlider" type="range" min="0" max="20.0625" step="0.0625" value="0">
+    <span id="timeRead" class="hint">0.00s</span>
   </div>
 </div>
 <main>
@@ -173,6 +182,7 @@
       v.addEventListener('pause', () => { if (state.sync) syncAll('pause'); });
       v.addEventListener('seeked', () => { if (state.sync) syncAll('seek', v.currentTime); });
     });
+    bindTimeline();
   }
   let syncing = false;
   function syncAll(action, t){
@@ -183,6 +193,45 @@
       else if (action === 'seek') v.currentTime = t;
     });
     setTimeout(() => syncing = false, 60);
+  }
+  function visibleVideos(){ return Array.from(document.querySelectorAll('video')); }
+  function playAll(){
+    const vids = visibleVideos();
+    syncing = true;
+    vids.forEach(v => { try { v.currentTime = 0; } catch(e){} });
+    vids.forEach(v => v.play().catch(()=>{}));
+    setTimeout(() => { syncing = false; }, 150);
+  }
+  function pauseAll(){ visibleVideos().forEach(v => v.pause()); }
+  function bindTimeline(){
+    const slider = $('#timeSlider'), read = $('#timeRead');
+    const setTime = (t) => {
+      t = Math.max(0, Math.min(20.0625, t));
+      const vids = visibleVideos();
+      if (!vids.length) return;
+      syncing = true;
+      vids.forEach(v => { try { v.currentTime = t; } catch(e){} });
+      setTimeout(() => { syncing = false; }, 50);
+      slider.value = String(t);
+      read.textContent = t.toFixed(2) + 's';
+    };
+    slider.oninput = () => setTime(Number(slider.value));
+    $('#prevFrame').onclick = () => {
+      const v = visibleVideos()[0];
+      setTime((v ? v.currentTime : Number(slider.value)) - 1/16);
+    };
+    $('#nextFrame').onclick = () => {
+      const v = visibleVideos()[0];
+      setTime((v ? v.currentTime : Number(slider.value)) + 1/16);
+    };
+    visibleVideos().forEach(v => v.addEventListener('timeupdate', () => {
+      if (syncing) return;
+      const first = visibleVideos()[0];
+      if (v === first) {
+        slider.value = String(v.currentTime);
+        read.textContent = v.currentTime.toFixed(2) + 's';
+      }
+    }));
   }
   function tabGroup(el, items, current, onPick){
     $(el).innerHTML = items.map(it => `<button class="${current===it.id?'on':''}" data-x="${it.id}">${esc(it.label)}</button>`).join('');
@@ -195,6 +244,8 @@
       v => { state.layer = v; tabs(); render(); });
   }
   $('#syncPlay').onchange = e => { state.sync = e.target.checked; };
+  $('#playAll').onclick = playAll;
+  $('#pauseAll').onclick = pauseAll;
   const brightOn=$('#brightOn'), brightRange=$('#brightRange'), brightVal=$('#brightVal');
   function applyBright(){
     const on=brightOn.checked, v=Number(brightRange.value);
