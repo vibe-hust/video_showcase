@@ -110,7 +110,6 @@
     </ul>
   </details>
   <div id="promptText" class="prompt-text"></div>
-  <div id="baselineStrip"></div>
   <div id="content"></div>
   <p class="legend">柱状图 = 27 个 chunk 的 K 序列（高度∝K）。黄色「复用」不存在；所有格子都是本次新跑。</p>
 </main>
@@ -196,21 +195,31 @@
     const b = D.baseline;
     if (!b) return '';
     const v = (b.videos || []).find(x => Number(x.prompt) === Number(state.prompt));
-    if (!v) return `<div class="base-info">baseline 无 prompt ${state.prompt}</div>`;
+    if (!v) return `<div class="mcell" style="padding:20px;color:#9aa0ae">baseline 无 prompt ${state.prompt}</div>`;
     const p = b.params || {};
-    return `<div class="baseline-strip">
+    return `<article class="mcell" data-id="${esc(b.id)}">
+      <div class="mhead"><span class="k">baseline</span><span class="sched">modifications off · 20.06s</span></div>
       <video src="${esc(v.path)}" poster="${esc(v.poster||'')}" controls loop muted playsinline preload="none"></video>
-      <div class="base-info">
-        <b>baseline</b> · modifications off · 20.06s · K=1<br>
-        <span class="muted">layer ${esc(p.loop_indices)} · hooks off · 27 chunks · prompt ${state.prompt}</span>
+      <div class="cfgline"><span class="cfgid">${esc(b.id)}</span>
+        <span class="cfgtxt"><b>layer ${esc(p.loop_indices)}</b> · <b>K=1</b> · modifications off · 20.06s</span></div>
+      <div class="meta">
+        <span class="badge layer">layers ${esc(p.loop_indices)}</span>
+        <span class="badge k">K=1</span>
+        <span class="badge">hooks off</span>
+        <span class="badge">20.06s · 27 chunks</span>
       </div>
-    </div>`;
+      <div class="sched">
+        <div class="cap">27 个 chunk 的实际 K（baseline 恒为 1）</div>
+        <div class="kbars">${bars(b.seq || Array(27).fill(1), Math.max(...D.ks))}</div>
+        <div class="cap">min K=1 · max K=1</div>
+      </div>
+      <div class="mfoot"><span>prompt ${state.prompt}</span>${stars(b, state.prompt)}</div>
+    </article>`;
   }
 
   function render(){
     const layers = state.layer === 'all' ? D.layers : [state.layer];
-    const items = [];
-    $('#baselineStrip').innerHTML = baselineCard();
+    const items = [baselineCard()];
     D.ks.forEach(k => {
       if (state.k !== 'all' && Number(k) !== Number(state.k)) return;
       layers.forEach(layer => {
