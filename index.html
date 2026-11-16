@@ -70,8 +70,8 @@
           <h2 id="videos-title">Same prompt.<br><em>Different loop.</em></h2>
         </div>
         <div class="section-intro">
-          <p>Paired generations from LongLive 2.0 5B show the standard run beside an experimental loop configuration. Choose a duration, then compare each pair with its prompt in view.</p>
-          <p class="evidence-note"><span class="note-mark" aria-hidden="true">i</span> These are manually reviewed custom-prompt demonstrations, not RememBench results or evidence from a searched program.</p>
+          <p>Explore LongLive 2.0 5B generations by duration and prompt. Select a loop configuration to compare with the baseline, and expand the prompt for context. The first two 15-second scenes also include additional baseline samples with different seeds.</p>
+          <p class="evidence-note"><span class="note-mark" aria-hidden="true">i</span> These are custom-prompt demonstrations for manual review, separate from RememBench and the searched-program results. Additional baseline samples use different seeds and are not matched loop comparisons.</p>
         </div>
       </div>
 
@@ -166,7 +166,7 @@
   </main>
 
   <footer class="site-footer">
-    <div class="section-shell footer-inner"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true">E</span><span>ELP<span class="brand-dot">.</span></span></a><p>Evolving Loop Programs · Research project</p><a class="back-top" href="#top">Back to top ↑</a></div>
+    <div class="section-shell footer-inner"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true">E</span><span>ELP<span class="brand-dot">.</span></span></a><p>Evolving Loop Programs · Research project</p><div class="footer-links"><a href="https://taohu.me/lab/" target="_blank" rel="noreferrer">Lab homepage ↗</a><a class="back-top" href="#top">Back to top ↑</a></div></div>
   </footer>
 
   <script src="data.js"></script>
@@ -178,21 +178,21 @@
       const count = document.getElementById('galleryCount');
       const html = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
       const durations = [...new Set(entries.map(item => item.duration).filter(Boolean))].sort((a, b) => parseFloat(a) - parseFloat(b));
-      const loopLabel = 'Loop K=4 · layers 12–19 · steps [0,1]';
-
       function sceneMarkup(item, index) {
         const title = item.title || `Scene ${String(index + 1).padStart(2, '0')}`;
         const duration = item.duration || '';
         const model = item.model || 'LongLive 2.0 5B';
         const prompt = item.prompt || '';
         const baseline = item.baseline || '';
-        const ours = item.ours || '';
+        const variants = Array.isArray(item.variants) ? item.variants : (item.ours ? [{label: 'Loop K=4 · layers 12–19 · steps [0,1]', src: item.ours}] : []);
+        const firstVariant = variants[0] || {label: 'No comparison available', src: ''};
         return `<article class="scene-card">
           <div class="scene-heading"><div><span class="scene-eyebrow">${html(duration)} · CUSTOM PROMPT</span><h3>${html(title.replace(/^\d+s\s*[·•-]\s*/i, ''))}</h3></div><span class="scene-model">${html(model)}</span></div>
           <div class="video-pair">
             <figure class="video-panel"><figcaption><span class="video-kind">BASELINE</span><span>${html(model)}</span></figcaption><video controls playsinline preload="none" aria-label="Baseline video for ${html(title)}"><source src="${html(baseline)}" type="video/mp4">Your browser does not support HTML video.</video></figure>
-            <figure class="video-panel video-panel-loop"><figcaption><span class="video-kind video-kind-loop">LOOP</span><span>${html(loopLabel)}</span></figcaption><video controls playsinline preload="none" aria-label="Experimental loop video for ${html(title)}"><source src="${html(ours)}" type="video/mp4">Your browser does not support HTML video.</video></figure>
+            <figure class="video-panel video-panel-loop"><figcaption><span class="video-kind video-kind-loop">CONFIGURATION</span><span class="variant-label">${html(firstVariant.label)}</span></figcaption><video controls playsinline preload="none" aria-label="${html(firstVariant.label)} video for ${html(title)}"><source src="${html(firstVariant.src)}" type="video/mp4">Your browser does not support HTML video.</video></figure>
           </div>
+          ${variants.length > 1 ? `<label class="variant-select-label">Compare configuration<select class="variant-select" aria-label="Choose a video configuration for ${html(title)}">${variants.map((variant, variantIndex) => `<option value="${variantIndex}">${html(variant.label)}</option>`).join('')}</select></label>` : ''}
           <details class="prompt-details"><summary>View prompt</summary><p>${html(prompt)}</p></details>
         </article>`;
       }
@@ -202,6 +202,21 @@
         gallery.innerHTML = selected.length
           ? selected.map(sceneMarkup).join('')
           : '<p class="gallery-empty">No videos are available for this duration yet.</p>';
+        gallery.querySelectorAll('.scene-card').forEach((card, cardIndex) => {
+          const item = selected[cardIndex];
+          const variants = Array.isArray(item.variants) ? item.variants : (item.ours ? [{label: 'Loop K=4 · layers 12–19 · steps [0,1]', src: item.ours}] : []);
+          const select = card.querySelector('.variant-select');
+          if (!select) return;
+          select.addEventListener('change', () => {
+            const variant = variants[Number(select.value)];
+            const video = card.querySelector('.video-panel-loop video');
+            const source = video.querySelector('source');
+            card.querySelector('.variant-label').textContent = variant.label;
+            video.setAttribute('aria-label', `${variant.label} video for ${item.title}`);
+            source.src = variant.src;
+            video.load();
+          });
+        });
         count.textContent = `${selected.length} paired ${selected.length === 1 ? 'example' : 'examples'} · ${duration}`;
         tabs.querySelectorAll('button').forEach(button => {
           const active = button.dataset.duration === duration;
