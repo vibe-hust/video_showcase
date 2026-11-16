@@ -65,7 +65,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, video:focus-visibl
 .site-nav { display: flex; align-items: center; justify-content: center; gap: clamp(14px, 2.5vw, 34px); }
 .site-nav a, .nav-link { color: #58665f; text-decoration: none; font-size: 12px; font-weight: 650; transition: color .2s ease; }
 .site-nav a:hover, .nav-link:hover { color: var(--ink); }
-.nav-link { color: var(--ink); padding: 8px 0; }
+.nav-link { color: var(--ink); padding: 8px 0; white-space: nowrap; }
 .nav-link span { color: #699b31; margin-left: 4px; }
 
 .hero {
@@ -248,7 +248,7 @@ h2 { margin-bottom: 0; font-size: clamp(38px, 5.2vw, 57px); line-height: 1.08; }
   .site-nav { gap: 13px; overflow: auto; scrollbar-width: none; }
   .site-nav::-webkit-scrollbar { display: none; }
   .site-nav a { font-size: 10px; white-space: nowrap; }
-  .nav-link { display: none; }
+  .nav-link { font-size: 10px; flex-shrink: 0; }
   .brand { gap: 6px; font-size: 13px; }
   .brand-mark { width: 24px; height: 24px; font-size: 12px; }
   .hero { gap: 30px; padding-top: 55px; padding-bottom: 58px; }
