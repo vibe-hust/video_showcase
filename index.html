@@ -1,577 +1,228 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>batch_infer 默认网格 · 分类对照</title>
-<style>
-  :root{
-    --bg:#0e0f13; --panel:#16181f; --panel2:#1d2029; --line:#2a2e3a;
-    --fg:#e8e9ee; --muted:#9aa0ae; --accent:#6ea8fe; --good:#4ade80;
-    --reuse:#fbbf24; --strong:#7c9cff; --weak:#4b5266;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);
-       font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif}
-  header{padding:24px 28px 16px;border-bottom:1px solid var(--line);
-         background:linear-gradient(180deg,#14161d,#0e0f13)}
-  h1{margin:0 0 6px;font-size:21px;letter-spacing:.2px}
-  header p{margin:3px 0;color:var(--muted);max-width:1100px}
-  .controls{position:sticky;top:0;z-index:20;background:rgba(14,15,19,.95);
-            backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 28px}
-  .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:5px 0}
-  .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;min-width:52px}
-  button{background:var(--panel2);color:var(--fg);border:1px solid var(--line);
-         border-radius:8px;padding:5px 10px;font:inherit;cursor:pointer;font-size:13px}
-  button:hover{border-color:#3b4254}
-  button.on{background:#243052;border-color:#3f5ea8;color:#cfdcff}
-  label.hint{color:var(--muted);font-size:12px}
-  main{padding:20px 28px 90px}
-  .help{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:0 0 16px}
-  .help summary{cursor:pointer;font-weight:600}
-  .help ul{margin:8px 0 0 18px;padding:0}
-  .help li{margin:5px 0;color:#cfd3dd}
-  .help code{background:#232735;padding:1px 5px;border-radius:4px;font-size:12px;color:#cfe0ff}
-  .prompt-text{background:var(--panel);border:1px solid var(--line);border-radius:10px;
-               padding:10px 14px;color:#cfd3dd;margin-bottom:16px;max-height:110px;overflow:auto}
-  .layer-block{margin-bottom:16px}
-  .layer-head{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
-  .layer-head h2{font-size:17px;margin:0}
-  .layer-head span{color:var(--muted);font-size:12px}
-  .matrix{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}
-  .mcell{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;
-         display:flex;flex-direction:column;transition:opacity .15s}
-  .mcell.dim{opacity:.22;filter:saturate(.4)}
-  .mcell.hidden{display:none}
-  .mcell.ref{outline:2px solid var(--accent)}
-  .fixedline{background:var(--panel);border:1px solid var(--line);border-radius:10px;
-             padding:7px 12px;margin:0 0 10px;font-size:12px;color:#cfd3dd}
-  .fixedline b{color:#fff}
-  .fixedline .axisname{color:var(--accent);margin-left:10px}
-  .cmp-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:10px}
-  .pinned-wrap{margin:0 0 12px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#12141a}
-  .pinned-label{font-size:12px;color:var(--muted);margin:0 0 8px}
-  .pinned-row{display:flex;flex-wrap:wrap;gap:10px}
-  .pinned-row .mcell{flex:0 0 330px;max-width:330px}
-  .mhead .axisval{font:700 12px ui-monospace,monospace;color:#cfe0ff;background:#22304a;
-                  border:1px solid #35507a;border-radius:6px;padding:1px 6px}
-  .mhead .refbadge{font-size:9px;color:#0e0f13;background:var(--accent);border-radius:999px;padding:1px 5px;margin-left:auto}
-  .mhead .vsbase{font-size:9px;color:#cfe0ff;border:1px solid #35507a;border-radius:999px;padding:1px 5px;margin-left:auto}
-  .timeline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
-  .timeline input[type=range]{flex:1;min-width:180px}
-  .cmp-select{background:var(--panel2);color:var(--fg);border:1px solid var(--line);
-              border-radius:6px;padding:3px 7px;font:inherit;font-size:12px}
-  .mcell.empty{opacity:.45;align-items:center;justify-content:center;min-height:180px;color:var(--muted);
-               font-size:12px;text-align:center;padding:20px}
-  .mhead{display:flex;align-items:center;gap:6px;padding:5px 8px}
-  .mhead .k{font:600 12px ui-monospace,monospace;padding:2px 7px;border-radius:999px;background:#232735;color:#c6cbd8}
-  .mhead .k1{color:#cbd5e1;border:1px solid #475569}
-  .mhead .k2{color:#bae6fd;border:1px solid #0ea5e9}
-  .mhead .k4{color:#ddd6fe;border:1px solid #8b5cf6}
-  .mhead .sched{font-size:11px;color:var(--muted);line-height:1.25}
-  .mhead .reuse{font-size:10px;color:#1c1400;background:var(--reuse);border-radius:999px;padding:1px 6px;margin-left:auto}
-  video{width:100%;aspect-ratio:832/480;background:#000;display:block;
-        filter:brightness(var(--vb,1.35)) contrast(var(--vc,1.05))}
-  .cfgline{display:flex;align-items:center;gap:6px;padding:5px 8px;flex-wrap:wrap;
-           background:linear-gradient(90deg,#1e2636,#1a1d26);border-left:3px solid var(--accent)}
-  .cfgline .cfgid{font:700 11px ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfe0ff;
-                  background:#22304a;border:1px solid #35507a;border-radius:5px;padding:1px 5px;
-                  white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-  .cfgline .cfgtxt{font-size:11px;color:#d7dbe5;line-height:1.3;min-width:0}
-  .cfgline .cfgtxt b{color:#fff}
-  .meta{display:flex;flex-wrap:wrap;gap:4px;padding:4px 8px 0}
-  .badge{font-size:10px;padding:1px 6px;border-radius:999px;background:#232735;color:#c6cbd8;
-         border:1px solid #2e3342;white-space:nowrap}
-  .badge.k{background:#2b2440;border-color:#463a6b;color:#d9ccff}
-  .badge.layer{background:#1f2f2a;border-color:#2f5044;color:#b9f0d8}
-  .badge.step{background:#332a1c;border-color:#5a4726;color:#ffdca8}
-  .badge.ws{background:#2a2430;border-color:#4a3a55;color:#e8c8ff}
-  .badge.ode{background:#1c2a36;border-color:#2c4a63;color:#b8dcff}
-  .badge.off{background:#20232d;border-color:#2e3342;color:#7f8798}
-  .sched{padding:8px 11px 10px;border-top:1px solid var(--line);margin-top:8px}
-  .sched .cap{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:5px 0 3px}
-  .steps{display:flex;gap:4px}
-  .step{flex:1;text-align:center;font:10px ui-monospace,monospace;padding:3px 0;border-radius:4px;
-        background:#20232d;color:#6f7686;border:1px solid #2a2e3a}
-  .step.on{background:#3a2f16;border-color:#6b5525;color:#ffd88a}
-  .chunks{display:flex;gap:3px}
-  .chunk{flex:1;height:9px;border-radius:2px;background:var(--weak)}
-  .chunk.strong{background:var(--strong)}
-  .chunk.uniform{background:#3a4152}
-  .layers{display:flex;gap:1px}
-  .layer{flex:1;height:9px;border-radius:1px;background:#22252f}
-  .layer.on{background:#4ade80}
-  .mfoot{display:flex;align-items:center;gap:6px;padding:4px 8px;border-top:1px solid var(--line);
-         color:var(--muted);font-size:10px;flex-wrap:wrap}
-  .mfoot .id{font:10px ui-monospace,monospace;overflow-wrap:anywhere;min-width:0}
-  .stars{margin-left:auto;display:flex;gap:2px}
-  .stars span{cursor:pointer;color:#4a4f5e;font-size:14px;line-height:1}
-  .stars span.on{color:#fbbf24}
-  .rowhint{color:var(--muted);font-size:11px;margin:6px 0 -4px}
-  .legend{color:var(--muted);font-size:12px;margin:6px 0 0}
-  @media(max-width:1100px){.matrix{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media(max-width:620px){header,main,.controls{padding-left:14px;padding-right:14px}.matrix{grid-template-columns:1fr}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f1">
+  <meta name="description" content="Evolving Loop Programs discovers executable inference programs for frozen transformers through offline search.">
+  <title>Evolving Loop Programs — Discovering How Frozen Transformers Should Loop</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header>
-  <h1>batch_infer 默认网格 · 分类对照</h1>
-  <p>原始 48 config 网格（4 layer × 3 K × 2 early-late × 2 weak-strong）。42 个新跑 + 6 个复用已有结果。</p>
-  <p>分类轴：<b>Layer / K / early-late（采样步窗口）/ weak-strong（视频 chunk）</b>。矩阵按 layer 分组，行=K，列=调度。</p>
-</header>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="#top" aria-label="Evolving Loop Programs home"><span class="brand-mark" aria-hidden="true">E</span><span>ELP<span class="brand-dot">.</span></span></a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="#overview">Overview</a>
+        <a href="#method">Method</a>
+        <a href="#images">Images</a>
+        <a href="#videos">Videos</a>
+        <a href="#findings">Findings</a>
+      </nav>
+      <a class="nav-link" href="#videos">Explore examples <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
 
-<div class="controls">
-  <div class="row">
-    <span class="lbl">Prompt</span><div id="promptTabs" class="row" style="margin:0"></div>
-    <span id="filterLayerWrap" style="display:flex;gap:9px;align-items:center">
-      <span class="lbl" style="margin-left:12px">Layer</span><div id="layerTabs" class="row" style="margin:0"></div>
-    </span>
-  </div>
-  <div class="row" id="filterRow2">
-    <span class="lbl">K</span><div id="kTabs" class="row" style="margin:0"></div>
-    <span class="lbl" style="margin-left:12px">early-late</span><div id="earlyTabs" class="row" style="margin:0"></div>
-    <span class="lbl" style="margin-left:12px">weak-strong</span><div id="weakTabs" class="row" style="margin:0"></div>
-  </div>
-  <div class="row">
-    <span class="lbl">View</span>
-    <button id="viewCompare" class="on">对比</button>
-    <button id="viewMatrix">矩阵</button>
-    <button id="viewGrid">列表</button>
-    <a href="linear/" style="margin-left:12px;color:var(--accent);font-size:12px;text-decoration:none">20s 前期少 loop → 后期多 loop ↗</a>
-    <label class="hint" style="margin-left:12px"><input id="detailToggle" type="checkbox"> 详细</label>
-    <label class="hint" style="margin-left:12px"><input id="syncPlay" type="checkbox" checked> 同步播放/暂停</label>
-    <label class="hint" style="margin-left:12px"><input id="brightOn" type="checkbox" checked> 提亮</label>
-    <input id="brightRange" type="range" min="1" max="2.2" step="0.05" value="1.35" style="width:110px">
-    <span id="brightVal" class="hint">1.35×</span>
-    <span id="count" class="hint" style="margin-left:auto"></span>
-  </div>
-  <div class="row" id="cmpControls">
-    <span class="lbl">Reference</span>
-    <select id="refLayer" class="cmp-select"></select>
-    <select id="refK" class="cmp-select"></select>
-    <select id="refEarly" class="cmp-select"></select>
-    <select id="refWeak" class="cmp-select"></select>
-    <span class="lbl" style="margin-left:12px">Axis</span>
-    <div id="axisTabs" class="row" style="margin:0"></div>
-  </div>
-  <div class="row timeline" id="timelineRow">
-    <button id="prevFrame">◀ 帧</button>
-    <button id="playAll">统一播放</button>
-    <button id="pauseAll">统一暂停</button>
-    <button id="nextFrame">帧 ▶</button>
-    <input id="timeSlider" type="range" min="0" max="5.0625" step="0.0625" value="0">
-    <span id="timeRead" class="hint">0.00s</span>
-  </div>
-</div>
-
-<main>
-  <details class="help" id="conclusions" open>
-    <summary>结论（与 baseline 对比）</summary>
-    <ul>
-      <li><b>参照物</b>：对比视图最左侧是真正的 baseline（<code>modifications off</code>），同 prompt、同 seed、同 5.06s；右侧所有变体只改一个超参数。</li>
-      <li><b>Layer</b>：在本 48 网格中，只有 <b>layer 28</b> 的单层 loop 能保持场景稳定；layer 1、14 和 1-3 在 K≥2 后出现明显的语义漂移或纹理崩坏。</li>
-      <li><b>K</b>：在 layer 28 上 K=1/2/4 都能跑；把 K 加到其他层会更快崩坏。K 不是越大越好。</li>
-      <li><b>early-late</b>：只在前两个采样步（0-1）循环，通常比四步全程循环更稳；把 loop 放到后两步更容易在视频后期退化。</li>
-      <li><b>weak-strong</b>：前段 strong、后段 weak 在 K=4 时画面偏灰绿；在本网格里没有看到相对 uniform K 的稳定增益。</li>
-      <li><b>XSA / guidance</b>：XSA 开启更颗粒化；当前 DMD few-step 路径没有 CFG，guidance 不可搜索。</li>
-      <li><b>边界</b>：以上基于 3 条 prompt、5s、EMA checkpoint；判断以视频为准，本站不展示代理指标。</li>
-    </ul>
-  </details>
-  <details class="help">
-    <summary>超参数含义</summary>
-    <ul>
-      <li><b>layer</b>：参与 loop 的 transformer block 范围（0–29，闭区间）。例如 <code>1-3</code> 表示 block 1、2、3 作为一整组重复执行。</li>
-      <li><b>K</b>：选中的层组在每次 denoising call 中的<b>总执行次数</b>；K=1 等于不循环（不是“额外次数”）。</li>
-      <li><b>early-late（采样步窗口）</b>：每个视频 chunk 有 4 次 denoising call，对应 t0=1000、t1≈750、t2≈500、t3≈250。<code>early off</code> = 四步都按 K 循环；<code>early 0-1</code> = 只在前两步循环，后两步 K 自动降为 1。</li>
-      <li><b>weak-strong（视频 chunk 调度）</b>：沿视频时间方向共 7 个 chunk。<code>strong_fraction=0.5</code> 表示前 4 个 chunk 用 K、后 3 个用 <code>weak_k</code>（默认 1）；<code>weak off</code> = 全程统一用 K。</li>
-      <li><b>update mode</b>：<code>standard</code> = 整组层直接重复；<code>ode</code> = 每个完整 pass 后做松弛更新 <code>h + (g(h)-h)/K</code>。</li>
-      <li><b>XSA</b>：去掉与 value 平行的 attention 分量；batch_infer 默认关闭。</li>
-      <li><b>时长</b>：<code>latent_frames=21</code> → 81 帧 @16fps = 5.06 秒。</li>
-      <li><b>复用（黄标）</b>：该组合在此前 sweep 已跑过，直接复用已有视频，未重复生成。</li>
-    </ul>
-    <p class="legend">「提亮」只作用于网页显示（CSS brightness/contrast），不修改源 mp4；默认 1.35×。暗画面可能来自 prompt 本身（黄昏/夜景）或 loop 失败，请以原始亮度为准判断失败，提亮只帮助看清细节。</p>
-  </details>
-  <div id="promptText" class="prompt-text"></div>
-  <div id="pinnedWrap" class="pinned-wrap" style="display:none">
-    <div class="pinned-label">Baseline（始终显示，不随过滤变化）</div>
-    <div id="pinned" class="pinned-row"></div>
-  </div>
-  <div id="content"></div>
-  <p class="legend">K：灰=1 / 蓝=2 / 紫=4 &nbsp;·&nbsp; 黄色「复用」= 此前已跑过、直接复用视频 &nbsp;·&nbsp; 灰色参数徽章 = 该轴关闭</p>
-</main>
-
-<script src="data.js"></script>
-<script>
-(function(){
-  const D = window.GRID_DATA || {cells:{},prompts:[],layers:[],ks:[],schedules:[]};
-  const state = {prompt:1, layer:'1', k:'all', early:'all', weak:'all',
-                 view:'compare', sync:false, detail:false,
-                 ref:{layer:'1', k:2, early:'off', weak:'off'}, axis:'layer'};
-  const $ = s => document.querySelector(s);
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  let ratings = {};
-  try { ratings = JSON.parse(localStorage.getItem('grid_ratings') || '{}'); } catch(e){}
-  const KCLASS = {1:'k1',2:'k2',4:'k4'};
-  const SCHED_LABEL = Object.fromEntries((D.schedules||[]).map(s => [s.id, s.label]));
-
-  function videoFor(cell, pidx){
-    return (cell.videos || []).find(v => Number(v.prompt) === Number(pidx)) || (cell.videos||[])[0];
-  }
-
-  function cfgLine(cell, layer, k, sched){
-    const p = cell.params || {};
-    const early = p.early_late_enabled ? `early ${p.loop_sampling_steps}` : 'early off';
-    const weak = p.weak_strong_enabled ? `weak K=${p.weak_k} · ${Math.round((p.strong_fraction||0)*100)}% strong` : 'weak off';
-    const short = cell.id.replace(/^reuse_/, '').split('_')[0];
-    return `<div class="cfgline">
-      <span class="cfgid">${esc(short)}</span>
-      <span class="cfgtxt"><b>layer ${esc(layer)}</b> · <b>K=${k}</b> · ${esc(early)} · ${esc(weak)}</span>
-    </div>`;
-  }
-
-  function badges(cell){
-    const p = cell.params || {};
-    const early = p.early_late_enabled ? `early ${p.loop_sampling_steps}` : 'early off';
-    const weak = p.weak_strong_enabled ? `weak K=${p.weak_k}` : 'weak off';
-    return [
-      `<span class="badge layer">L${esc(p.loop_indices)}</span>`,
-      `<span class="badge k">K=${p.loop_k}</span>`,
-      `<span class="badge step">${esc(early)}</span>`,
-      `<span class="badge ws">${esc(weak)}</span>`,
-    ].join('');
-  }
-
-  function scheduleHTML(cell){
-    const p = cell.params || {};
-    const earlyOn = !!p.early_late_enabled;
-    const range = String(p.loop_sampling_steps || '0-1').split('-').map(Number);
-    const lo = earlyOn ? range[0] : 0, hi = earlyOn ? (range[1] ?? range[0]) : 3;
-    const steps = [0,1,2,3].map(i =>
-      `<div class="step ${i>=lo && i<=hi ? 'on':''}">t${i}</div>`).join('');
-    const weakOn = !!p.weak_strong_enabled;
-    const frac = weakOn ? (p.strong_fraction ?? 0.5) : 1;
-    const nStrong = Math.ceil(7 * frac);
-    const chunks = Array.from({length:7}, (_,i) => {
-      const cls = weakOn ? (i < nStrong ? 'strong' : '') : 'uniform';
-      return `<div class="chunk ${cls}" title="chunk ${i+1}"></div>`;
-    }).join('');
-    const li = String(p.loop_indices || '');
-    let lo2 = 0, hi2 = -1;
-    if (li.includes('-')) [lo2, hi2] = li.split('-').map(Number);
-    else lo2 = hi2 = Number(li);
-    const layers = Array.from({length:30}, (_,i) =>
-      `<div class="layer ${i>=lo2 && i<=hi2 ? 'on':''}" title="block ${i}"></div>`).join('');
-    return `<div class="sched">
-      <div class="cap">loop 施加的采样步（t0=1000 … t3=250）</div><div class="steps">${steps}</div>
-      <div class="cap">视频 chunk：strong（蓝）/ weak（灰）— weak-strong 关闭时全灰蓝</div><div class="chunks">${chunks}</div>
-      <div class="cap">30 层 transformer：参与 loop 的层（绿）</div><div class="layers">${layers}</div>
-    </div>`;
-  }
-
-  function stars(cell, pidx){
-    const key = cell.id + ':' + pidx;
-    const r = Number(ratings[key] || 0);
-    return `<div class="stars" data-key="${esc(key)}">` +
-      [1,2,3,4,5].map(i => `<span data-v="${i}" class="${i<=r?'on':''}">★</span>`).join('') + '</div>';
-  }
-
-  function cellHTML(layer, k, sched, cell){
-    if (!cell) return `<div class="mcell empty">未跑 / 无匹配<br>layer ${esc(layer)} · K=${k}<br>${esc(SCHED_LABEL[sched]||sched)}</div>`;
-    const v = videoFor(cell, state.prompt);
-    if (!v) return `<div class="mcell empty">无 prompt ${state.prompt}</div>`;
-    const reuse = cell.source === 'reused' ? '<span class="reuse">复用</span>' : '';
-    return `<article class="mcell" data-id="${esc(cell.id)}">
-      <div class="mhead">
-        <span class="k ${KCLASS[k]||''}">K=${k}</span>
-        <span class="sched">${esc(SCHED_LABEL[sched]||sched)}</span>${reuse}
+  <main id="main">
+    <section class="hero section-shell" id="top" aria-labelledby="page-title">
+      <div class="hero-copy" id="overview">
+        <p class="eyebrow"><span class="eyebrow-line"></span> Research project</p>
+        <h1 id="page-title">Evolving<br><em>Loop Programs</em></h1>
+        <p class="hero-subtitle">Discovering how frozen transformers should loop.</p>
+        <p class="hero-description">An offline search procedure lets a language model inspect, edit, and evaluate executable loop programs. The selected program is then frozen and replayed on new inputs without further calls to the search model.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#videos">Watch video examples <span aria-hidden="true">↓</span></a>
+          <a class="button button-quiet" href="#method">How it works <span aria-hidden="true">↘</span></a>
+        </div>
+        <div class="hero-facts" aria-label="Method properties">
+          <span><b>01</b> Frozen weights</span>
+          <span><b>02</b> Offline search</span>
+          <span><b>03</b> Frozen replay</span>
+        </div>
       </div>
-      <video src="${esc(v.path)}" poster="${esc(v.path.replace(/\.mp4$/, '.jpg'))}"
-             controls loop muted playsinline preload="none"></video>
-      ${cfgLine(cell, layer, k, sched)}
-      <div class="meta">${badges(cell)}</div>
-      ${state.detail ? scheduleHTML(cell) : ''}
-      <div class="mfoot"><span class="id">${esc(cell.id)}</span><span class="id">prompt ${state.prompt}</span>${stars(cell, state.prompt)}</div>
-    </article>`;
-  }
 
-  function matchFilters(layer, k, sched){
-    if (state.layer !== 'all' && String(layer) !== state.layer) return false;
-    if (state.k !== 'all' && Number(k) !== Number(state.k)) return false;
-    const early = sched.startsWith('early01') ? 'early01' : 'off';
-    const weak = sched.endsWith('weak1') ? 'weak1' : 'off';
-    if (state.early !== 'all' && early !== state.early) return false;
-    if (state.weak !== 'all' && weak !== state.weak) return false;
-    return true;
-  }
+      <aside class="hero-process" aria-label="Loop program search process">
+        <div class="process-head"><span>THE SEARCH LOOP</span><span class="process-status"><i></i> OFFLINE</span></div>
+        <ol class="process-list">
+          <li><span class="process-index">01</span><div><strong>Observe</strong><small>Collect diagnostics from model behavior</small></div><span class="process-symbol" aria-hidden="true">⌕</span></li>
+          <li><span class="process-index">02</span><div><strong>Evolve</strong><small>Edit loop structure, dynamics, and control</small></div><span class="process-symbol" aria-hidden="true">↻</span></li>
+          <li><span class="process-index">03</span><div><strong>Evaluate</strong><small>Compare candidates and retain trade-offs</small></div><span class="process-symbol" aria-hidden="true">↗</span></li>
+          <li class="process-final"><span class="process-index">04</span><div><strong>Freeze &amp; replay</strong><small>Run the selected program without the search LLM</small></div><span class="process-symbol" aria-hidden="true">→</span></li>
+        </ol>
+        <div class="process-foot"><span class="weight-lock" aria-hidden="true">●</span> Pretrained weights stay fixed throughout</div>
+      </aside>
+    </section>
 
-  function axisValues(){
-    const r = state.ref;
-    if (state.axis === 'layer')
-      return D.layers.map(l => ({layer:l, k:r.k, early:r.early, weak:r.weak, label:'L'+l}));
-    if (state.axis === 'k')
-      return D.ks.map(k => ({layer:r.layer, k, early:r.early, weak:r.weak, label:'K='+k}));
-    if (state.axis === 'early')
-      return ['off','early01'].map(e => ({layer:r.layer, k:r.k, early:e, weak:r.weak,
-        label: e === 'off' ? 'early off' : 'early 0-1'}));
-    return ['off','weak1'].map(w => ({layer:r.layer, k:r.k, early:r.early, weak:w,
-      label: w === 'off' ? 'weak off' : 'weak 1'}));
-  }
+    <section class="scope-band" aria-label="Evaluation scope">
+      <div class="scope-inner">
+        <span class="scope-label">ONE SEARCH FRAMEWORK</span>
+        <span class="scope-item"><i class="scope-icon scope-image" aria-hidden="true"></i> Image generation</span>
+        <span class="scope-item"><i class="scope-icon scope-video" aria-hidden="true"></i> Video generation</span>
+        <span class="scope-item"><i class="scope-icon scope-text" aria-hidden="true"></i> Text reasoning</span>
+      </div>
+    </section>
 
-  function cellFor(v){
-    return D.cells[`${v.layer}|${v.k}|${v.early}_${v.weak}`];
-  }
+    <section class="section-shell content-section" id="videos" aria-labelledby="videos-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow section-kicker"><span>01</span> Video examples</p>
+          <h2 id="videos-title">Same prompt.<br><em>Different loop.</em></h2>
+        </div>
+        <div class="section-intro">
+          <p>Paired generations from LongLive 2.0 5B show the standard run beside an experimental loop configuration. Choose a duration, then compare each pair with its prompt in view.</p>
+          <p class="evidence-note"><span class="note-mark" aria-hidden="true">i</span> These are manually reviewed custom-prompt demonstrations, not RememBench results or evidence from a searched program.</p>
+        </div>
+      </div>
 
-  function isRefCell(v){
-    const r = state.ref;
-    return String(v.layer) === String(r.layer) && Number(v.k) === Number(r.k)
-      && v.early === r.early && v.weak === r.weak;
-  }
+      <div class="gallery-toolbar">
+        <div class="duration-switch" id="durationTabs" role="group" aria-label="Filter video examples by duration"></div>
+        <p id="galleryCount" class="gallery-count" role="status" aria-live="polite"></p>
+      </div>
+      <div id="videoGallery" class="scene-grid" aria-live="polite">
+        <p class="gallery-empty">Loading video examples…</p>
+      </div>
+      <noscript><p class="gallery-empty">Enable JavaScript to browse the video comparisons.</p></noscript>
+    </section>
 
-  function compareCard(v){
-    const cell = cellFor(v);
-    const ref = isRefCell(v);
-    if (!cell) return `<div class="mcell empty">未跑 / 无匹配<br>${esc(v.label)}</div>`;
-    const vid = videoFor(cell, state.prompt);
-    if (!vid) return `<div class="mcell empty">无 prompt ${state.prompt}</div>`;
-    return `<article class="mcell ${ref?'ref':''}" data-id="${esc(cell.id)}">
-      <div class="mhead"><span class="axisval">${esc(v.label)}</span>
-        <span class="sched">${esc(SCHED_LABEL[v.early+'_'+v.weak] || '')}</span>
-        ${ref?'<span class="refbadge">reference</span>':'<span class="vsbase">vs baseline</span>'}</div>
-      <video src="${esc(vid.path)}" poster="${esc(vid.path.replace(/\.mp4$/, '.jpg'))}"
-             controls loop muted playsinline preload="none"></video>
-      ${cfgLine(cell, v.layer, v.k, v.early+'_'+v.weak)}
-      <div class="meta">${badges(cell)}</div>
-      ${state.detail ? scheduleHTML(cell) : ''}
-      <div class="mfoot"><span class="id">${esc(cell.id)}</span>${stars(cell, state.prompt)}</div>
-    </article>`;
-  }
+    <section class="image-section" id="images" aria-labelledby="images-title">
+      <div class="section-shell image-inner">
+        <div class="image-copy">
+          <p class="eyebrow section-kicker"><span>02</span> Image generation</p>
+          <h2 id="images-title">Visual results<br><em>coming soon.</em></h2>
+          <p>Selected image comparisons will be added here when the paper visuals are ready. The current paper reports image quality and inference-compute results across models with and without pretrained loops.</p>
+          <a class="text-link" href="#findings">See the reported findings <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="image-placeholder" aria-label="Reserved space for future image results">
+          <div class="placeholder-top"><span>IMAGE COMPARISONS</span><span>TO BE ADDED</span></div>
+          <div class="placeholder-frame"><span class="frame-corner corner-tl"></span><span class="frame-corner corner-tr"></span><span class="frame-corner corner-bl"></span><span class="frame-corner corner-br"></span><p>Image results will appear here</p></div>
+          <div class="placeholder-bottom"><span>BASELINE</span><span>ELP</span></div>
+        </div>
+      </div>
+    </section>
 
-  function baselineCard(){
-    const b = D.baseline;
-    if (!b) return '';
-    const vid = videoFor(b, state.prompt);
-    if (!vid) return `<div class="mcell empty">baseline 无 prompt ${state.prompt}</div>`;
-    const p = b.params || {};
-    return `<article class="mcell" data-id="${esc(b.id)}">
-      <div class="mhead"><span class="axisval">baseline</span>
-        <span class="sched">modifications off · 5s</span></div>
-      <video src="${esc(vid.path)}" poster="${esc(vid.path.replace(/\.mp4$/, '.jpg'))}"
-             controls loop muted playsinline preload="none"></video>
-      ${cfgLine(b, p.loop_indices, p.loop_k, 'off_off')}
-      <div class="meta">${badges(b)}</div>
-      ${state.detail ? scheduleHTML(b) : ''}
-      <div class="mfoot"><span class="id">${esc(b.id)}</span>${stars(b, state.prompt)}</div>
-    </article>`;
-  }
+    <section class="section-shell content-section method-section" id="method" aria-labelledby="method-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow section-kicker"><span>03</span> Method</p>
+          <h2 id="method-title">Search once.<br><em>Replay when needed.</em></h2>
+        </div>
+        <div class="section-intro">
+          <p>ELP searches over executable programs that determine which blocks repeat, how hidden states are updated, and when computation is reused. Development evidence guides the search; deployment uses the frozen result.</p>
+        </div>
+      </div>
+      <div class="method-grid">
+        <article class="method-card"><span class="method-number">01 / OBSERVE</span><h3>Read model behavior</h3><p>Diagnostics inspect intermediate states and execution traces on development inputs.</p></article>
+        <article class="method-card"><span class="method-number">02 / EDIT</span><h3>Write a loop program</h3><p>The search LLM changes structure, state-update dynamics, and execution controls.</p></article>
+        <article class="method-card"><span class="method-number">03 / SELECT</span><h3>Keep useful trade-offs</h3><p>Candidate programs are evaluated and compared under task-specific objectives.</p></article>
+        <article class="method-card method-card-final"><span class="method-number">04 / DEPLOY</span><h3>Freeze and replay</h3><p>The selected code and settings run on new inputs with no search-LLM call.</p></article>
+      </div>
+      <p class="method-footnote"><span aria-hidden="true">↳</span> The outer loop edits programs offline; the inner transformer loops run during evaluation and deployment.</p>
+    </section>
 
-  function compareView(){
-    const items = axisValues();
-    const fixed = [];
-    if (state.axis !== 'layer') fixed.push(`layer ${state.ref.layer}`);
-    if (state.axis !== 'k') fixed.push(`K=${state.ref.k}`);
-    if (state.axis !== 'early') fixed.push(state.ref.early === 'off' ? 'early off' : 'early 0-1');
-    if (state.axis !== 'weak') fixed.push(state.ref.weak === 'off' ? 'weak off' : 'weak 1');
-    const axisLabel = {layer:'Layer', k:'K', early:'early-late', weak:'weak-strong'}[state.axis];
-    return `<div class="fixedline"><b>基线</b>：modifications off · 5s（最左）
-      <span class="axisname">变化轴：${axisLabel}</span>
-      <span style="color:var(--muted)"> · 变体固定：${esc(fixed.join(' · '))} · ${items.length} 个变体 · prompt ${state.prompt}</span></div>
-      <div class="cmp-row">${baselineCard()}${items.map(compareCard).join('')}</div>`;
-  }
+    <section class="findings-section" id="findings" aria-labelledby="findings-title">
+      <div class="section-shell content-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow section-kicker"><span>04</span> Findings</p>
+            <h2 id="findings-title">Evidence across<br><em>three settings.</em></h2>
+          </div>
+          <div class="section-intro"><p>Each result uses a separately searched frozen program. The reported gains depend on the model, task, and evaluation protocol.</p></div>
+        </div>
 
-  function matrixView(){
-    const layers = state.layer === 'all' ? D.layers : [state.layer];
-    return layers.map(layer => {
-      const rows = D.ks.map(k => {
-        const cells = D.schedules.map(s => {
-          const cell = D.cells[`${layer}|${k}|${s.id}`];
-          const html = cellHTML(layer, k, s.id, cell);
-          return matchFilters(layer, k, s.id) ? html
-            : html.replace('class="mcell', 'class="mcell hidden');
-        }).join('');
-        return `<div class="rowhint">K = ${k}</div><div class="matrix">${cells}</div>`;
-      }).join('');
-      return `<section class="layer-block">
-        <div class="layer-head"><h2>layer ${esc(layer)}</h2><span>行=K，列=调度（early-late × weak-strong）</span></div>
-        ${rows}</section>`;
-    }).join('');
-  }
+        <div class="finding-grid">
+          <article class="finding-card finding-image">
+            <div class="finding-top"><span>IMAGE / RAE</span><span class="finding-index">A</span></div>
+            <strong class="finding-stat">5.19<span>×</span></strong>
+            <h3>Lower inference FLOPs</h3>
+            <p>A selected program improves both GenEval and DPG-Bench while using 5.19× fewer inference FLOPs than standard unlooped inference.</p>
+            <span class="finding-foot">FLOPs ratio; not wall-clock acceleration</span>
+          </article>
+          <article class="finding-card finding-video">
+            <div class="finding-top"><span>LONG VIDEO / REMEMBENCH</span><span class="finding-index">B</span></div>
+            <strong class="finding-stat finding-stat-small">3 metrics <span>↑</span></strong>
+            <h3>More consistent revisits</h3>
+            <p>On LongLive 2.0 5B, the reported means change from 0.8585 to 0.9282 CLIP, 0.3852 to 0.1492 LPIPS, and 0.9681 to 0.9905 TempSSIM across 100 scenes.</p>
+            <span class="finding-foot">20 search scenes + 80 held-out scenes; higher compute</span>
+          </article>
+          <article class="finding-card finding-text">
+            <div class="finding-top"><span>TEXT / QWEN3-4B</span><span class="finding-index">C</span></div>
+            <strong class="finding-stat">65.48<span>%</span></strong>
+            <h3>Micro accuracy</h3>
+            <p>Compared with 63.81% for standard inference and 65.04% for Fixed Loop on 4,145 STEM questions.</p>
+            <span class="finding-foot">Accuracy only; no compute-efficiency measurement</span>
+          </article>
+          <article class="finding-card finding-looped">
+            <div class="finding-top"><span>IMAGE / LOOPED-DIT</span><span class="finding-index">D</span></div>
+            <strong class="finding-stat finding-stat-small">+4.07 <span>pp</span></strong>
+            <h3>GenEval at matched steps</h3>
+            <p>At 14 steps, the selected program also gains 3.80 pp on DPG-Bench while reducing inference compute by 8.7% versus native inference.</p>
+            <span class="finding-foot">Step-matched comparison; DPG-Bench gain</span>
+          </article>
+        </div>
+        <p class="findings-note"><span class="note-mark" aria-hidden="true">i</span> Short-video VBench results show a separate quality–compute trade-off: the 26-step Speed program uses 2.37× fewer FLOPs with a lower score; the 50-step Quality program scores 85.12 versus 84.92 at higher compute.</p>
+      </div>
+    </section>
+  </main>
 
-  function gridView(){
-    const items = [];
-    D.layers.forEach(layer => D.ks.forEach(k => D.schedules.forEach(s => {
-      if (!matchFilters(layer, k, s.id)) return;
-      const cell = D.cells[`${layer}|${k}|${s.id}`];
-      if (cell) items.push(cellHTML(layer, k, s.id, cell));
-    })));
-    return `<div class="grid">${items.join('')}</div>`;
-  }
+  <footer class="site-footer">
+    <div class="section-shell footer-inner"><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true">E</span><span>ELP<span class="brand-dot">.</span></span></a><p>Evolving Loop Programs · Research project</p><a class="back-top" href="#top">Back to top ↑</a></div>
+  </footer>
 
-  function render(){
-    const cmp = state.view === 'compare';
-    if (cmp || !D.baseline) {
-      $('#pinnedWrap').style.display = 'none';
-    } else {
-      $('#pinned').innerHTML = baselineCard();
-      $('#pinnedWrap').style.display = 'block';
-    }
-    const html = cmp ? compareView() : (state.view === 'matrix' ? matrixView() : gridView());
-    $('#content').innerHTML = html || '<p class="legend">没有匹配的配置</p>';
-    const p = D.prompts.find(x => x.index === state.prompt);
-    $('#promptText').textContent = p ? `P${p.index}: ${p.text}` : '';
-    $('#count').textContent = cmp
-      ? `${axisValues().length} 个变体 · prompt ${state.prompt}`
-      : `${Object.keys(D.cells).length} / 48 个格子已填充 · ${state.view==='matrix'?'矩阵':'列表'} · prompt ${state.prompt}`;
-    $('#cmpControls').style.display = cmp ? 'flex' : 'none';
-    $('#timelineRow').style.display = cmp ? 'flex' : 'none';
-    $('#filterLayerWrap').style.display = cmp ? 'none' : 'flex';
-    $('#filterRow2').style.display = cmp ? 'none' : 'flex';
-    bind();
-  }
+  <script src="data.js"></script>
+  <script>
+    (() => {
+      const entries = Array.isArray(window.SHOWCASE_VIDEOS) ? window.SHOWCASE_VIDEOS : [];
+      const tabs = document.getElementById('durationTabs');
+      const gallery = document.getElementById('videoGallery');
+      const count = document.getElementById('galleryCount');
+      const html = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+      const durations = [...new Set(entries.map(item => item.duration).filter(Boolean))].sort((a, b) => parseFloat(a) - parseFloat(b));
+      const loopLabel = 'Loop K=4 · layers 12–19 · steps [0,1]';
 
-  function bind(){
-    document.querySelectorAll('.stars').forEach(el => {
-      el.querySelectorAll('span').forEach(star => {
-        star.onclick = () => {
-          const key = el.dataset.key, v = Number(star.dataset.v);
-          ratings[key] = (Number(ratings[key]) === v) ? 0 : v;
-          localStorage.setItem('grid_ratings', JSON.stringify(ratings));
-          el.querySelectorAll('span').forEach(s => s.classList.toggle('on', Number(s.dataset.v) <= ratings[key]));
-        };
-      });
-    });
-    document.querySelectorAll('video').forEach(v => {
-      v.addEventListener('play', () => { if (state.sync) syncAll('play'); });
-      v.addEventListener('pause', () => { if (state.sync) syncAll('pause'); });
-      v.addEventListener('seeked', () => { if (state.sync) syncAll('seek', v.currentTime); });
-    });
-    if (state.view === 'compare') bindTimeline();
-  }
-
-  function bindTimeline(){
-    const slider = $('#timeSlider'), read = $('#timeRead');
-    const setTime = (t) => {
-      t = Math.max(0, Math.min(5.0625, t));
-      const vids = visibleVideos();
-      if (!vids.length) return;
-      syncing = true;
-      vids.forEach(v => { try { v.currentTime = t; } catch(e){} });
-      setTimeout(() => { syncing = false; }, 50);
-      slider.value = String(t);
-      read.textContent = t.toFixed(2) + 's';
-    };
-    slider.oninput = () => setTime(Number(slider.value));
-    $('#prevFrame').onclick = () => {
-      const v = visibleVideos()[0];
-      setTime((v ? v.currentTime : Number(slider.value)) - 1/16);
-    };
-    $('#nextFrame').onclick = () => {
-      const v = visibleVideos()[0];
-      setTime((v ? v.currentTime : Number(slider.value)) + 1/16);
-    };
-    visibleVideos().forEach(v => v.addEventListener('timeupdate', () => {
-      if (syncing) return;
-      const first = visibleVideos()[0];
-      if (v === first) {
-        slider.value = String(v.currentTime);
-        read.textContent = v.currentTime.toFixed(2) + 's';
+      function sceneMarkup(item, index) {
+        const title = item.title || `Scene ${String(index + 1).padStart(2, '0')}`;
+        const duration = item.duration || '';
+        const model = item.model || 'LongLive 2.0 5B';
+        const prompt = item.prompt || '';
+        const baseline = item.baseline || '';
+        const ours = item.ours || '';
+        return `<article class="scene-card">
+          <div class="scene-heading"><div><span class="scene-eyebrow">${html(duration)} · CUSTOM PROMPT</span><h3>${html(title.replace(/^\d+s\s*[·•-]\s*/i, ''))}</h3></div><span class="scene-model">${html(model)}</span></div>
+          <div class="video-pair">
+            <figure class="video-panel"><figcaption><span class="video-kind">BASELINE</span><span>${html(model)}</span></figcaption><video controls playsinline preload="none" aria-label="Baseline video for ${html(title)}"><source src="${html(baseline)}" type="video/mp4">Your browser does not support HTML video.</video></figure>
+            <figure class="video-panel video-panel-loop"><figcaption><span class="video-kind video-kind-loop">LOOP</span><span>${html(loopLabel)}</span></figcaption><video controls playsinline preload="none" aria-label="Experimental loop video for ${html(title)}"><source src="${html(ours)}" type="video/mp4">Your browser does not support HTML video.</video></figure>
+          </div>
+          <details class="prompt-details"><summary>View prompt</summary><p>${html(prompt)}</p></details>
+        </article>`;
       }
-    }));
-  }
 
-  let syncing = false;
-  function syncAll(action, t){
-    if (syncing) return; syncing = true;
-    document.querySelectorAll('video').forEach(v => {
-      if (action === 'play') v.play().catch(()=>{});
-      else if (action === 'pause') v.pause();
-      else if (action === 'seek') v.currentTime = t;
-    });
-    setTimeout(() => syncing = false, 60);
-  }
+      function render(duration) {
+        const selected = entries.filter(item => (item.duration || '') === duration);
+        gallery.innerHTML = selected.length
+          ? selected.map(sceneMarkup).join('')
+          : '<p class="gallery-empty">No videos are available for this duration yet.</p>';
+        count.textContent = `${selected.length} paired ${selected.length === 1 ? 'example' : 'examples'} · ${duration}`;
+        tabs.querySelectorAll('button').forEach(button => {
+          const active = button.dataset.duration === duration;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+      }
 
-  function tabGroup(el, items, current, onPick){
-    $(el).innerHTML = items.map(it =>
-      `<button class="${current===it.id?'on':''}" data-x="${it.id}">${esc(it.label)}</button>`).join('');
-    document.querySelectorAll(`#${el.replace('#','')} [data-x]`).forEach(b => b.onclick = () => onPick(b.dataset.x));
-  }
-
-  function refSelects(){
-    const layerSel = $('#refLayer'), kSel = $('#refK'), earlySel = $('#refEarly'), weakSel = $('#refWeak');
-    layerSel.innerHTML = D.layers.map(l => `<option value="${esc(l)}">L${esc(l)}</option>`).join('');
-    kSel.innerHTML = D.ks.map(k => `<option value="${k}">K=${k}</option>`).join('');
-    earlySel.innerHTML = '<option value="off">early off</option><option value="early01">early 0-1</option>';
-    weakSel.innerHTML = '<option value="off">weak off</option><option value="weak1">weak 1</option>';
-    layerSel.value = state.ref.layer;
-    kSel.value = String(state.ref.k);
-    earlySel.value = state.ref.early;
-    weakSel.value = state.ref.weak;
-    layerSel.onchange = e => { state.ref.layer = e.target.value; render(); };
-    kSel.onchange = e => { state.ref.k = Number(e.target.value); render(); };
-    earlySel.onchange = e => { state.ref.early = e.target.value; render(); };
-    weakSel.onchange = e => { state.ref.weak = e.target.value; render(); };
-  }
-
-  function tabs(){
-    tabGroup('#promptTabs', D.prompts.map(p => ({id:String(p.index), label:'P'+p.index})), String(state.prompt),
-      v => { state.prompt = Number(v); tabs(); render(); });
-    tabGroup('#layerTabs', [{id:'all',label:'全部'}, ...D.layers.map(l => ({id:l,label:'L'+l}))], state.layer,
-      v => { state.layer = v; tabs(); render(); });
-    tabGroup('#kTabs', [{id:'all',label:'全部'}, ...D.ks.map(k => ({id:String(k),label:'K='+k}))], state.k,
-      v => { state.k = v; tabs(); render(); });
-    tabGroup('#earlyTabs', [{id:'all',label:'全部'},{id:'off',label:'early off'},{id:'early01',label:'early 0-1'}], state.early,
-      v => { state.early = v; tabs(); render(); });
-    tabGroup('#weakTabs', [{id:'all',label:'全部'},{id:'off',label:'weak off'},{id:'weak1',label:'weak 1'}], state.weak,
-      v => { state.weak = v; tabs(); render(); });
-    tabGroup('#axisTabs', [
-      {id:'layer', label:'Layer'}, {id:'k', label:'K'},
-      {id:'early', label:'early-late'}, {id:'weak', label:'weak-strong'}
-    ], state.axis, v => { state.axis = v; tabs(); render(); });
-  }
-
-  function setView(v){
-    state.view = v;
-    $('#viewCompare').classList.toggle('on', v === 'compare');
-    $('#viewMatrix').classList.toggle('on', v === 'matrix');
-    $('#viewGrid').classList.toggle('on', v === 'grid');
-    render();
-  }
-  $('#viewCompare').onclick = () => setView('compare');
-  $('#viewMatrix').onclick = () => setView('matrix');
-  $('#viewGrid').onclick = () => setView('grid');
-  $('#syncPlay').onchange = e => { state.sync = e.target.checked; };
-  $('#detailToggle').onchange = e => { state.detail = e.target.checked; render(); };
-
-  function visibleVideos(){
-    return Array.from(document.querySelectorAll('video')).filter(v => v.offsetParent !== null);
-  }
-  function playAll(){
-    const vids = visibleVideos();
-    syncing = true;
-    vids.forEach(v => { try { v.currentTime = 0; } catch(e){} });
-    vids.forEach(v => { v.play().catch(()=>{}); });
-    setTimeout(() => { syncing = false; }, 150);
-  }
-  function pauseAll(){
-    visibleVideos().forEach(v => v.pause());
-  }
-  $('#playAll').onclick = playAll;
-  $('#pauseAll').onclick = pauseAll;
-
-  const brightOn = $('#brightOn'), brightRange = $('#brightRange'), brightVal = $('#brightVal');
-  function applyBright(){
-    const on = brightOn.checked;
-    const v = Number(brightRange.value);
-    document.documentElement.style.setProperty('--vb', on ? v : 1);
-    document.documentElement.style.setProperty('--vc', on ? (1 + (v - 1) * 0.25) : 1);
-    brightVal.textContent = (on ? v.toFixed(2) : '1.00') + '×';
-  }
-  brightOn.onchange = applyBright;
-  brightRange.oninput = applyBright;
-  applyBright();
-
-  refSelects(); tabs(); render();
-})();
-</script>
+      if (!entries.length || !durations.length) {
+        tabs.hidden = true;
+        gallery.innerHTML = '<p class="gallery-empty">Video examples will appear here when the paired clips are ready.</p>';
+        count.textContent = '';
+      } else {
+        tabs.innerHTML = durations.map(duration => `<button type="button" data-duration="${html(duration)}" aria-pressed="false">${html(duration)} videos</button>`).join('');
+        tabs.addEventListener('click', event => {
+          const button = event.target.closest('button[data-duration]');
+          if (button) render(button.dataset.duration);
+        });
+        render(durations[0]);
+      }
+    })();
+  </script>
 </body>
 </html>
